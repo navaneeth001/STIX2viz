@@ -1,8 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import vis from "vis-network";
-import stix2viz from "C:/Users/Augmento/Desktop/Scadafence/my-app/src/stix2viz/stix2viz/stix2viz.js";
-import { DataSet, DataView, Queue } from "vis-data/esnext";
-let canvas = document.getElementById("canvas");
+import stix2viz from "../stix2viz/stix2viz/stix2viz";
 let listView = null;
 let graphView = null;
 let view = null;
