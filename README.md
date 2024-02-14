@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+React STIX2 Visualization Component
+This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Features
+Rapid visualization of STIX 2.0 content using D3.js library.
+100% browser-based, ensuring data privacy as no data is transmitted to any server.
+Supports visualization of objects and relationships between them.
+Click on nodes or paths to view detailed information for the element.
+Double-click to unpin a pinned node.
+Easily load JSON files, paste JSON text, or provide the URL for an external JSON file.
+Installation
+Install the package via npm:
 
-## Available Scripts
+bash
+Copy code
+npm install react-stix2-visualization
+Usage
+jsx
+Copy code
+import React from 'react';
+import STIX2Visualization from 'react-stix2-visualization';
 
-In the project directory, you can run:
+const App = () => {
+return (
+<div>
+<h1>STIX2 Visualization</h1>
+<STIX2Visualization />
+</div>
+);
+}
 
-### `npm start`
+export default App;
+Props
+data (optional): The STIX 2 JSON data to visualize. If not provided, the component will allow users to upload a file, paste JSON text, or provide a URL for an external JSON file.
+Example
+jsx
+Copy code
+import React from 'react';
+import STIX2Visualization from 'react-stix2-visualization';
+import stixData from './data/sample_stix_data.json'; // Example JSON data
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+const App = () => {
+return (
+<div>
+<h1>STIX2 Visualization</h1>
+<STIX2Visualization data={stixData} />
+</div>
+);
+}
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+export default App;
+Demo
+You can find a live demo of this component here.
 
-### `npm test`
+Contributing
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### `npm run build`
+Acknowledgements
+This project is inspired by the STIX Visualization project from the OASIS CTI Open Repository. Special thanks to the contributors of that project.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Support
+For any questions or support, please open an issue on GitHub.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Author
+Your Name
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Version
+Current version: 1.0.0
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Changelog
+1.0.0 (YYYY-MM-DD): Initial release.
+Roadmap
+Add support for custom styling options.
+Improve performance for handling large JSON datasets.
+Enhance accessibility features.
+Integrate with other STIX-related tools and libraries.
