@@ -22,6 +22,7 @@ import STIX2Visualization from 'react-stix2-visualization';
 
 const App = () => {
 return (
+
 <div>
 <h1>STIX2 Visualization</h1>
 <STIX2Visualization />
@@ -41,6 +42,7 @@ import stixData from './data/sample_stix_data.json'; // Example JSON data
 
 const App = () => {
 return (
+
 <div>
 <h1>STIX2 Visualization</h1>
 <STIX2Visualization data={stixData} />
@@ -68,10 +70,10 @@ Author
 Your Name
 
 Version
-Current version: 1.0.0
+Current version: 1.0.1
 
 Changelog
-1.0.0 (YYYY-MM-DD): Initial release.
+1.0.1 (YYYY-MM-DD): Initial release.
 Roadmap
 Add support for custom styling options.
 Improve performance for handling large JSON datasets.
