@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from "react";
 import vis from "vis-network";
 import stix2viz from "../stix2viz/stix2viz/stix2viz";
+import PropTypes from "prop-types";
+
 let listView = null;
 let graphView = null;
 let view = null;
@@ -106,9 +108,10 @@ const TestJson = {
   ],
 };
 
-const Stixviewer = () => {
+const Stixviewer = ({ stixJson = TestJson }) => {
   // Assume you have the STIX data
-  const stixData = { TestJson };
+  console.log("incoming stixJson data", stixJson);
+  const stixData = stixJson;
 
   const graphContainer = useRef(null);
   const customConfig = {};
@@ -387,24 +390,24 @@ const Stixviewer = () => {
     );
     selectedContainer.append(...contentNodes);
 
-    populateConnections(stixObject, edgeDataSet, stixIdToObject);
+    // populateConnections(stixObject, edgeDataSet, stixIdToObject);
   }
   function graphViewClickHandler(event, edgeDataSet, stixIdToObject) {
     if (event.nodes.length > 0) {
       // A click on a node
-      let stixObject = stixIdToObject.get(event.nodes[0]);
-      if (stixObject) populateSelected(stixObject, edgeDataSet, stixIdToObject);
-    } else if (event.edges.length > 0) {
+      // let stixObject = stixIdToObject.get(event.nodes[0]);
+      // if (stixObject) populateSelected(stixObject, edgeDataSet, stixIdToObject);
+      // } else if (event.edges.length > 0) {
       // A click on an edge
       let stixRel = stixIdToObject.get(event.edges[0]);
-      if (stixRel) populateSelected(stixRel, edgeDataSet, stixIdToObject);
-      // Just make something up to show for embedded relationships
-      else
-        populateSelected(
-          new Map([["", "(Embedded relationship)"]]),
-          edgeDataSet,
-          stixIdToObject
-        );
+      // if (stixRel) populateSelected(stixRel, edgeDataSet, stixIdToObject);
+      // // Just make something up to show for embedded relationships
+      // else
+      //   populateSelected(
+      //     new Map([["", "(Embedded relationship)"]]),
+      //     edgeDataSet,
+      //     stixIdToObject
+      //   );
     }
     // else, just a click on the canvas
   }
@@ -417,7 +420,7 @@ const Stixviewer = () => {
       // You need to import the required dependencies for vis and stix2viz
       console.log("outerWrapper div", graphWrapper);
       const [nodeDataList, edgeDataSet, stixIdToObject] =
-        stix2viz.makeGraphData(stixData.TestJson);
+        stix2viz.makeGraphData(stixData);
       console.log("nodeDataList from graph", nodeDataList);
       console.log("edgeDataSet from graph", edgeDataSet);
       console.log("stixIdToObject from graph", stixIdToObject);
@@ -461,16 +464,16 @@ const Stixviewer = () => {
             height: "600px",
             border: "1px solid #ccc",
             boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-            borderRadius: "8px" /* Optional: Adds rounded corners */,
-            padding: "10px" /* Optional: Adds padding inside the border */,
+            borderRadius: "8px",
+            padding: "10px",
           }}
         />
         <div
           id="listContainer"
           style={{ height: "0px", width: "0px", backgroundColor: "blue" }}
         ></div>
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <div>
+        {/* <div style={{ display: "flex", flexDirection: "row" }}> */}
+        {/* <div>
             <h
               style={{
                 fontSize: "24px",
@@ -485,16 +488,16 @@ const Stixviewer = () => {
             <div
               id="selection"
               style={{
-                width: "300px",
-                height: "400px",
+                width: "0px",
+                height: "0px",
                 border: "1px solid #ccc",
                 boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px" /* Optional: Adds rounded corners */,
-                padding: "10px" /* Optional: Adds padding inside the border */,
+                borderRadius: "8px",
+                padding: "10px",
               }}
             ></div>
-          </div>
-          <div>
+          </div> */}
+        {/* <div>
             <h
               style={{
                 fontSize: "24px",
@@ -508,16 +511,16 @@ const Stixviewer = () => {
             <div
               id="connections-incoming"
               style={{
-                width: "300px",
-                height: "400px",
+                width: "0px",
+                height: "0px",
                 border: "1px solid #ccc",
                 boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px" /* Optional: Adds rounded corners */,
-                padding: "10px" /* Optional: Adds padding inside the border */,
+                borderRadius: "8px" ,
+                padding: "10px",
               }}
             ></div>
-          </div>
-          <div>
+          </div> */}
+        {/* <div>
             <h
               style={{
                 fontSize: "24px",
@@ -531,19 +534,21 @@ const Stixviewer = () => {
             <div
               id="connections-outcoming"
               style={{
-                width: "300px",
-                height: "400px",
+                width: "0px",
+                height: "0px",
                 border: "1px solid #ccc",
                 boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px" /* Optional: Adds rounded corners */,
-                padding: "10px" /* Optional: Adds padding inside the border */,
+                borderRadius: "8px",
+                padding: "10px",
               }}
             ></div>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );
 };
-
+Stixviewer.propTypes = {
+  stixJson: PropTypes.object, // Assuming stixJson can be any JSON object
+};
 export default Stixviewer;
