@@ -1,6 +1,6 @@
 {
   "name": "stix2vis",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A component for visualizing STIX data.",
   "main": "src/App.js",
   "private": false,
@@ -18,7 +18,7 @@
     "react-dom": "^18.2.0",
     "vis-network": "^9.1.9"
   },
-  "keywords": ["react", "stix", "visualization", "cyberSecurity","oasis"],
+  "keywords": ["react", "stix", "visualization", "cybers security","oasis"],
   "author": "Navaneeth Prakash",
   "license": "MIT",
   "scripts": {

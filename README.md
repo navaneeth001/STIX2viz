@@ -21,8 +21,7 @@ const App = () => {
 return (
 
 <div>
-<h1>STIX2 Visualization</h1>
-<STIX2Visualization />
+<STIX2Visualization stixJson={data}/>
 </div>
 );
 }
@@ -30,19 +29,18 @@ return (
 export default App;
 
 Props
-data (optional): The STIX 2 JSON data to visualize. If not provided, the component will allow users to upload a file, paste JSON text, or provide a URL for an external JSON file.
+data (optional): The STIX 2 JSON data to visualize. If not provided, the component will render a sample json file
 
 Example
 import React from 'react';
-import STIX2Visualization from 'react-stix2-visualization';
+import Stixviewer from 'stix2vis';
 import stixData from './data/sample_stix_data.json'; // Example JSON data
 
 const App = () => {
 return (
 
 <div>
-<h1>STIX2 Visualization</h1>
-<STIX2Visualization data={stixData} />
+<STIX2Visualization stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>
 </div>
 );
 }

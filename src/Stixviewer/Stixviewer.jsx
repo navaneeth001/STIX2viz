@@ -1,9 +1,7 @@
 import React, { useRef, useEffect } from "react";
-import vis from "vis-network";
 import stix2viz from "../stix2viz/stix2viz/stix2viz";
 import PropTypes from "prop-types";
 
-let listView = null;
 let graphView = null;
 let view = null;
 
@@ -17,7 +15,7 @@ const TestJson = {
       id: "identity--f690c992-8e7d-4b9a-9303-3312616c0220",
       created: "2016-08-08T15:50:10.983Z",
       modified: "2016-08-08T15:50:10.983Z",
-      name: "The MITRE Corporation - DHS Support Team",
+      name: "Sample Data",
       identity_class: "organization",
     },
     {
@@ -30,7 +28,7 @@ const TestJson = {
       is_family: true,
       description: "variant",
       malware_types: ["remote-access-trojan"],
-      name: "Poison Ivy",
+      name: "Sample Data",
     },
     {
       type: "indicator",
@@ -41,7 +39,7 @@ const TestJson = {
       created: "2014-05-08T09:00:00.000Z",
       modified: "2014-05-08T09:00:00.000Z",
       indicator_types: ["malicious-activity"],
-      name: "IP Address for known C2 channel",
+      name: "Sample Data",
       description: "Test description.",
       pattern: "[ipv4-addr:value = '10.0.0.0']",
       valid_from: "2014-05-08T09:00:00.000000Z",
@@ -55,7 +53,7 @@ const TestJson = {
       created: "2017-01-27T13:49:53.997Z",
       indicator_types: ["malicious-activity"],
       modified: "2017-01-27T13:49:53.997Z",
-      name: "File hash for Poison Ivy variant",
+      name: "Sample data",
       description: "Test description.",
       pattern:
         "[file:hashes.'SHA-256' = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c']",
@@ -68,7 +66,7 @@ const TestJson = {
       created_by_ref: "identity--f690c992-8e7d-4b9a-9303-3312616c0220",
       created: "2016-04-06T20:03:48.000Z",
       modified: "2016-04-06T20:03:48.000Z",
-      name: "Add TCP port 80 Filter Rule to the existing Block UDP 1434 Filter",
+      name: "Sample data",
       description:
         "This is how to add a filter rule to block inbound access to TCP port 80 to the existing UDP 1434 filter ...",
     },
@@ -108,7 +106,7 @@ const TestJson = {
   ],
 };
 
-const Stixviewer = ({ stixJson = TestJson }) => {
+const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
   // Assume you have the STIX data
   console.log("incoming stixJson data", stixJson);
   const stixData = stixJson;
@@ -389,47 +387,17 @@ const Stixviewer = ({ stixJson = TestJson }) => {
       /*topLevel=*/ true
     );
     selectedContainer.append(...contentNodes);
-
-    // populateConnections(stixObject, edgeDataSet, stixIdToObject);
   }
   function graphViewClickHandler(event, edgeDataSet, stixIdToObject) {
     if (event.nodes.length > 0) {
-      // A click on a node
-      // let stixObject = stixIdToObject.get(event.nodes[0]);
-      // if (stixObject) populateSelected(stixObject, edgeDataSet, stixIdToObject);
-      // } else if (event.edges.length > 0) {
-      // A click on an edge
-      let stixRel = stixIdToObject.get(event.edges[0]);
-      // if (stixRel) populateSelected(stixRel, edgeDataSet, stixIdToObject);
-      // // Just make something up to show for embedded relationships
-      // else
-      //   populateSelected(
-      //     new Map([["", "(Embedded relationship)"]]),
-      //     edgeDataSet,
-      //     stixIdToObject
-      //   );
     }
-    // else, just a click on the canvas
   }
   useEffect(() => {
     if (graphContainer.current) {
       const graphWrapper =
         graphContainer.current.querySelector("#graphContainer");
-      // const listWrapper = graphContainer.current.querySelector('#listContainer');
-
-      // You need to import the required dependencies for vis and stix2viz
-      console.log("outerWrapper div", graphWrapper);
       const [nodeDataList, edgeDataSet, stixIdToObject] =
         stix2viz.makeGraphData(stixData);
-      console.log("nodeDataList from graph", nodeDataList);
-      console.log("edgeDataSet from graph", edgeDataSet);
-      console.log("stixIdToObject from graph", stixIdToObject);
-
-      // vis.network
-      // const nodes =  new vis.DataSet(nodeDataList);
-      // const edges =  new vis.DataSet(linkDataList);
-      // console.log('nodes from graph',nodes);
-      // console.log('edges from graph',edges);
       customConfig.iconDir = ".";
       graphView = stix2viz.makeGraphView(
         graphWrapper,
@@ -438,25 +406,14 @@ const Stixviewer = ({ stixJson = TestJson }) => {
         stixIdToObject,
         customConfig
       );
-      //   listView = stix2viz.makeListView(
-      //     listWrapper, nodeDataList, edgeDataSet, stixIdToObject,
-      //     customConfig
-      // );
       graphView.on("click", (e) =>
         graphViewClickHandler(e, edgeDataSet, stixIdToObject)
       );
-      // populateLegend(...graphView.legendData);
-      console.log("view from stixviewer", listView);
-      // const container = graphContainer.current;
-      // const data = { nodes: nodes, edges: edges};
-      // console.log('data from graphContainer',container,data)
-      // const temp=new vis.Network(container, data);
-      // console.log('vis.Network data',temp)
     }
   }, []);
   return (
     <div ref={graphContainer}>
-      <div style={{ display: "flex", flexDirection: "row" }}>
+      <div style={{ display: "flex", flexDirection: "row", ...wrapStyle }}>
         <div
           id="graphContainer"
           style={{
@@ -466,89 +423,16 @@ const Stixviewer = ({ stixJson = TestJson }) => {
             boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
             borderRadius: "8px",
             padding: "10px",
+            ...graphStyle,
           }}
         />
-        <div
-          id="listContainer"
-          style={{ height: "0px", width: "0px", backgroundColor: "blue" }}
-        ></div>
-        {/* <div style={{ display: "flex", flexDirection: "row" }}> */}
-        {/* <div>
-            <h
-              style={{
-                fontSize: "24px",
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: "10px",
-              }}
-            >
-              Selection
-            </h>
-
-            <div
-              id="selection"
-              style={{
-                width: "0px",
-                height: "0px",
-                border: "1px solid #ccc",
-                boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px",
-                padding: "10px",
-              }}
-            ></div>
-          </div> */}
-        {/* <div>
-            <h
-              style={{
-                fontSize: "24px",
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: "10px",
-              }}
-            >
-              connections-incoming
-            </h>
-            <div
-              id="connections-incoming"
-              style={{
-                width: "0px",
-                height: "0px",
-                border: "1px solid #ccc",
-                boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px" ,
-                padding: "10px",
-              }}
-            ></div>
-          </div> */}
-        {/* <div>
-            <h
-              style={{
-                fontSize: "24px",
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: "10px",
-              }}
-            >
-              connections-outcoming
-            </h>
-            <div
-              id="connections-outcoming"
-              style={{
-                width: "0px",
-                height: "0px",
-                border: "1px solid #ccc",
-                boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px",
-                padding: "10px",
-              }}
-            ></div>
-          </div> */}
-        {/* </div> */}
       </div>
     </div>
   );
 };
 Stixviewer.propTypes = {
-  stixJson: PropTypes.object, // Assuming stixJson can be any JSON object
+  stixJson: PropTypes.object,
+  graphStyle: PropTypes.object,
+  wrapStyle: PropTypes.object,
 };
 export default Stixviewer;
