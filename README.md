@@ -17,14 +17,14 @@ Usage
 import React from 'react';
 import STIX2Visualization from 'stix2vis';
 
-const App = () => {
+<!-- const App = () => {
 return (
 
 <div>
 <STIX2Visualization stixJson={data}/>
 </div>
 );
-}
+} -->
 
 export default App;
 
@@ -36,14 +36,14 @@ import React from 'react';
 import Stixviewer from 'stix2vis';
 import stixData from './data/sample_stix_data.json'; // Example JSON data
 
-const App = () => {
+<!-- const App = () => {
 return (
 
 <div>
 <STIX2Visualization stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>
 </div>
 );
-}
+} -->
 
 export default App;
 Demo
