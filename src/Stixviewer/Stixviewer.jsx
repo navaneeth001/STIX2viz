@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from "react";
 import vis from "vis-network";
 import stix2viz from "../stix2viz/stix2viz/stix2viz";
+import PropTypes from "prop-types";
+
 let listView = null;
 let graphView = null;
 let view = null;
@@ -106,9 +108,10 @@ const TestJson = {
   ],
 };
 
-const Stixviewer = () => {
+const Stixviewer = ({ stixJson = TestJson }) => {
   // Assume you have the STIX data
-  const stixData = { TestJson };
+  console.log("incoming stixJson data", stixJson);
+  const stixData = stixJson;
 
   const graphContainer = useRef(null);
   const customConfig = {};
@@ -417,7 +420,7 @@ const Stixviewer = () => {
       // You need to import the required dependencies for vis and stix2viz
       console.log("outerWrapper div", graphWrapper);
       const [nodeDataList, edgeDataSet, stixIdToObject] =
-        stix2viz.makeGraphData(stixData.TestJson);
+        stix2viz.makeGraphData(stixData);
       console.log("nodeDataList from graph", nodeDataList);
       console.log("edgeDataSet from graph", edgeDataSet);
       console.log("stixIdToObject from graph", stixIdToObject);
@@ -545,5 +548,7 @@ const Stixviewer = () => {
     </div>
   );
 };
-
+Stixviewer.propTypes = {
+  stixJson: PropTypes.object, // Assuming stixJson can be any JSON object
+};
 export default Stixviewer;
