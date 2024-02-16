@@ -1,4 +1,3 @@
-"use strict";
 import vis from 'vis-network';
 import { DataSet } from "vis-data/esnext";
 /*

@@ -1,7 +1,7 @@
 import './App.css';
 import Stixviewer from "./Stixviewer/Stixviewer";
 
-function App() {
+function StixViewerView() {
   return (
     <div className="App">
       <Stixviewer />
@@ -9,4 +9,4 @@ function App() {
   );
 }
 
-export default App;
+export default StixViewerView;
