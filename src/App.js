@@ -1,11 +1,12 @@
 import './App.css';
-import Stixviewer from "./Stixviewer/Stixviewer";
+import React from 'react';
+import Stixviewer from './Stixviewer/Stixviewer';
 
-function StixViewerView() {
-  return (
-    <div className="App">
-      <Stixviewer />
-    </div>
+function StixViewerView({stixJson,graphStyle = null,wrapStyle = null}) {
+  return React.createElement('div', { className: 'App' },
+    React.createElement(Stixviewer, { stixJson: stixJson,
+      graphStyle: { graphStyle},
+      wrapStyle: { wrapStyle }})
   );
 }
 

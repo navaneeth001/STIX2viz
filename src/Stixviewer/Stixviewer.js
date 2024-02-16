@@ -107,297 +107,23 @@ const TestJson = {
 };
 
 const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
-  // Assume you have the STIX data
   console.log("incoming stixJson data", stixJson);
+  console.log("props from stixviewer", wrapStyle,graphStyle);
   const stixData = stixJson;
 
   const graphContainer = useRef(null);
   const customConfig = {};
-  function stixOtherContentToDOMNodes(otherContent) {
-    let nodes = [];
 
-    let asText;
-    if (otherContent === null) asText = "null";
-    else if (otherContent === undefined)
-      asText = "undefined"; // also just in case??
-    else asText = otherContent.toString();
-
-    let spanWrapper = document.createElement("span");
-    spanWrapper.append(asText);
-    spanWrapper.className = "selected-object-nontext-value";
-    nodes.push(spanWrapper);
-
-    return nodes;
-  }
-  function populateLegend(iconURLMap, defaultIconURL) {
-    let tbody, tr, td;
-    let colIdx = 0;
-    let table = document.getElementById("legend-content");
-
-    // Reset table content if necessary.
-    if (table.tBodies.length === 0) tbody = table.createTBody();
-    else tbody = table.tBodies[0];
-
-    tbody.replaceChildren();
-
-    tr = tbody.insertRow();
-
-    for (let [stixType, iconURL] of iconURLMap) {
-      let img = document.createElement("img");
-
-      img.onerror = function () {
-        // set the node's icon to the default if this image could not
-        // load
-        this.src = defaultIconURL;
-        // our default svg is enormous... shrink it down!
-        this.width = "37";
-        this.height = "37";
-      };
-      img.src = iconURL;
-
-      if (colIdx > 1) {
-        colIdx = 0;
-        tr = tbody.insertRow();
-      }
-
-      td = tr.insertCell();
-      ++colIdx;
-
-      td.append(img);
-      td.append(
-        stixType.charAt(0).toUpperCase() + stixType.substr(1).toLowerCase()
-      );
-    }
-  }
-  function stixStringContentToDOMNodes(
-    stringContent,
-    edgeDataSet,
-    stixIdToObject,
-    isRef = false
-  ) {
-    let nodes = [];
-
-    let spanWrapper = document.createElement("span");
-    spanWrapper.append(stringContent);
-
-    if (isRef) {
-      let referentObj = stixIdToObject.get(stringContent);
-      if (referentObj) {
-        spanWrapper.className = "selected-object-text-value-ref";
-        spanWrapper.addEventListener("click", (e) => {
-          e.stopPropagation();
-          view.selectNode(referentObj.get("id"));
-          populateSelected(referentObj, edgeDataSet, stixIdToObject);
-        });
-      } else spanWrapper.className = "selected-object-text-value-ref-dangling";
-    } else spanWrapper.className = "selected-object-text-value";
-
-    nodes.push(spanWrapper);
-
-    return nodes;
-  }
-  function stixArrayContentToDOMNodes(
-    arrayContent,
-    edgeDataSet,
-    stixIdToObject,
-    isRefs = false
-  ) {
-    let nodes = [];
-
-    let ol = document.createElement("ol");
-    ol.className = "selected-object-list";
-
-    for (let elt of arrayContent) {
-      let contentNodes;
-      if (isRefs)
-        contentNodes = stixStringContentToDOMNodes(
-          elt,
-          edgeDataSet,
-          stixIdToObject,
-          /*isRef=*/ true
-        );
-      else
-        contentNodes = stixContentToDOMNodes(elt, edgeDataSet, stixIdToObject);
-
-      let li = document.createElement("li");
-      li.append(...contentNodes);
-      ol.append(li);
-    }
-
-    nodes.push(document.createTextNode("["));
-    nodes.push(ol);
-    nodes.push(document.createTextNode("]"));
-
-    return nodes;
-  }
-  function stixContentToDOMNodes(stixContent, edgeDataSet, stixIdToObject) {
-    let nodes;
-
-    if (stixContent instanceof Map)
-      nodes = stixObjectContentToDOMNodes(
-        stixContent,
-        edgeDataSet,
-        stixIdToObject
-      );
-    else if (Array.isArray(stixContent))
-      nodes = stixArrayContentToDOMNodes(
-        stixContent,
-        edgeDataSet,
-        stixIdToObject
-      );
-    else if (typeof stixContent === "string" || stixContent instanceof String)
-      nodes = stixStringContentToDOMNodes(
-        stixContent,
-        edgeDataSet,
-        stixIdToObject
-      );
-    else nodes = stixOtherContentToDOMNodes(stixContent);
-
-    return nodes;
-  }
-
-  function stixObjectContentToDOMNodes(
-    objectContent,
-    edgeDataSet,
-    stixIdToObject,
-    topLevel = false
-  ) {
-    let nodes = [];
-
-    if (!topLevel) nodes.push(document.createTextNode("{"));
-
-    for (let [propName, propValue] of objectContent) {
-      let propNameSpan = document.createElement("span");
-      propNameSpan.className = "selected-object-prop-name";
-      propNameSpan.append(propName + ":");
-
-      let contentNodes;
-      if (propName.endsWith("_ref"))
-        contentNodes = stixStringContentToDOMNodes(
-          propValue,
-          edgeDataSet,
-          stixIdToObject,
-          /*isRef=*/ true
-        );
-      else if (propName.endsWith("_refs"))
-        contentNodes = stixArrayContentToDOMNodes(
-          propValue,
-          edgeDataSet,
-          stixIdToObject,
-          /*isRefs=*/ true
-        );
-      else
-        contentNodes = stixContentToDOMNodes(
-          propValue,
-          edgeDataSet,
-          stixIdToObject
-        );
-
-      let propDiv = document.createElement("div");
-      propDiv.append(propNameSpan);
-      propDiv.append(...contentNodes);
-
-      if (!topLevel) propDiv.className = "selected-object-object-content";
-
-      nodes.push(propDiv);
-    }
-
-    if (!topLevel) nodes.push(document.createTextNode("}"));
-
-    return nodes;
-  }
-  function populateConnections(stixObject, edgeDataSet, stixIdToObject) {
-    let objId = stixObject.get("id");
-
-    let edges = edgeDataSet.get({
-      filter: (item) => item.from === objId || item.to === objId,
-    });
-
-    let eltConnIncoming = graphContainer.current.querySelector(
-      "#connections-incoming"
-    );
-    let eltConnOutgoing = graphContainer.current.querySelector(
-      "#connections-outcoming"
-    );
-
-    eltConnIncoming?.replaceChildren();
-    eltConnOutgoing?.replaceChildren();
-
-    let listIn = document.createElement("ol");
-    let listOut = document.createElement("ol");
-
-    eltConnIncoming?.append(listIn);
-    eltConnOutgoing?.append(listOut);
-
-    for (let edge of edges) {
-      let targetList;
-      let summaryNode = document.createElement("summary");
-      let otherEndSpan = document.createElement("span");
-      let otherEndObj;
-
-      if (objId === edge.from) {
-        otherEndObj = stixIdToObject.get(edge.to);
-        otherEndSpan.append(otherEndObj.get("type"));
-
-        summaryNode.append(edge.label + " ");
-        summaryNode.append(otherEndSpan);
-
-        targetList = listOut;
-      } else {
-        otherEndObj = stixIdToObject.get(edge.from);
-        otherEndSpan.append(otherEndObj.get("type"));
-
-        summaryNode.append(otherEndSpan);
-        summaryNode.append(" " + edge.label);
-
-        targetList = listIn;
-      }
-
-      otherEndSpan.className = "selected-object-text-value-ref";
-      otherEndSpan.addEventListener("click", (e) => {
-        view.selectNode(otherEndObj.get("id"));
-        populateSelected(otherEndObj, edgeDataSet, stixIdToObject);
-      });
-
-      let li = document.createElement("li");
-      let detailsNode = document.createElement("details");
-
-      targetList.append(li);
-      li.append(detailsNode);
-      detailsNode.append(summaryNode);
-
-      let objRenderNodes = stixObjectContentToDOMNodes(
-        otherEndObj,
-        edgeDataSet,
-        stixIdToObject,
-        /*topLevel=*/ true
-      );
-      detailsNode.append(...objRenderNodes);
-    }
-  }
-  function populateSelected(stixObject, edgeDataSet, stixIdToObject) {
-    // Remove old values from HTML
-    let selectedContainer = graphContainer.current.querySelector("#selection");
-    selectedContainer.replaceChildren();
-
-    let contentNodes = stixObjectContentToDOMNodes(
-      stixObject,
-      edgeDataSet,
-      stixIdToObject,
-      /*topLevel=*/ true
-    );
-    selectedContainer.append(...contentNodes);
-  }
   function graphViewClickHandler(event, edgeDataSet, stixIdToObject) {
     if (event.nodes.length > 0) {
+      // Handle node click event if needed
     }
   }
+
   useEffect(() => {
     if (graphContainer.current) {
-      const graphWrapper =
-        graphContainer.current.querySelector("#graphContainer");
-      const [nodeDataList, edgeDataSet, stixIdToObject] =
-        stix2viz.makeGraphData(stixData);
+      const graphWrapper = graphContainer.current.querySelector("#graphContainer");
+      const [nodeDataList, edgeDataSet, stixIdToObject] = stix2viz.makeGraphData(stixData);
       customConfig.iconDir = ".";
       graphView = stix2viz.makeGraphView(
         graphWrapper,
@@ -411,28 +137,38 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
       );
     }
   }, []);
-  return (
-    <div ref={graphContainer}>
-      <div style={{ display: "flex", flexDirection: "row", ...wrapStyle }}>
-        <div
-          id="graphContainer"
-          style={{
-            width: "1000px",
-            height: "600px",
-            border: "1px solid #ccc",
-            boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-            borderRadius: "8px",
-            padding: "10px",
-            ...graphStyle,
-          }}
-        />
-      </div>
-    </div>
+
+  return React.createElement(
+    "div",
+    { ref: graphContainer },
+    React.createElement(
+      "div",
+      {
+        style: {
+          display: "flex",
+          flexDirection: "row",
+          ...wrapStyle
+        }
+      },
+      React.createElement("div", {
+        id: "graphContainer",
+        style: {
+          width: "1000px",
+          height: "600px",
+          border: "1px solid #ccc",
+          boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
+          borderRadius: "8px",
+          padding: "10px",
+          ...graphStyle
+        }
+      })
+    )
   );
 };
+
 Stixviewer.propTypes = {
   stixJson: PropTypes.object,
   graphStyle: PropTypes.object,
-  wrapStyle: PropTypes.object,
+  wrapStyle: PropTypes.object
 };
 export default Stixviewer;
