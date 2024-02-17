@@ -1,3 +1,5 @@
+This package is under maintenance we will be back with the latest version soon!
+
 React STIX2 Visualization Component
 This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.
 
