@@ -108,7 +108,7 @@ const TestJson = {
 
 const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
   console.log("incoming stixJson data", stixJson);
-  console.log("props from stixviewer", wrapStyle,graphStyle);
+  console.log("props from stixviewer", wrapStyle, graphStyle);
   const stixData = stixJson;
 
   const graphContainer = useRef(null);
@@ -122,8 +122,10 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
 
   useEffect(() => {
     if (graphContainer.current) {
-      const graphWrapper = graphContainer.current.querySelector("#graphContainer");
-      const [nodeDataList, edgeDataSet, stixIdToObject] = stix2viz.makeGraphData(stixData);
+      const graphWrapper =
+        graphContainer.current.querySelector("#graphContainer");
+      const [nodeDataList, edgeDataSet, stixIdToObject] =
+        stix2viz.makeGraphData(stixData);
       customConfig.iconDir = ".";
       graphView = stix2viz.makeGraphView(
         graphWrapper,
@@ -147,8 +149,8 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
         style: {
           display: "flex",
           flexDirection: "row",
-          ...wrapStyle
-        }
+          ...wrapStyle,
+        },
       },
       React.createElement("div", {
         id: "graphContainer",
@@ -159,8 +161,8 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
           boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
           borderRadius: "8px",
           padding: "10px",
-          ...graphStyle
-        }
+          ...graphStyle,
+        },
       })
     )
   );
@@ -169,6 +171,6 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
 Stixviewer.propTypes = {
   stixJson: PropTypes.object,
   graphStyle: PropTypes.object,
-  wrapStyle: PropTypes.object
+  wrapStyle: PropTypes.object,
 };
 export default Stixviewer;
