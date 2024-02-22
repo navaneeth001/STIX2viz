@@ -1,60 +1,65 @@
-React STIX2 Visualization Component
-This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.
+# Stix2Vis: Visualize STIX Data with Ease!
 
-Features
+### This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.***https://oasis-open.github.io/cti-stix-visualization/***
+
+![Sample rendering of a STIX2 Json indicating malware, indicators and identity](public/stix2.png)
+
+### Features
+
 Rapid visualization of STIX 2.0 content using D3.js library.
 100% browser-based, ensuring data privacy as no data is transmitted to any server.
 Supports visualization of objects and relationships between them.
-Click on nodes or paths to view detailed information for the element.
-Double-click to unpin a pinned node.
-Easily load JSON files, paste JSON text, or provide the URL for an external JSON file.
+Easily load JSON files,and it provides a relationship diagram as per oasis standards
 Installation
 Install the package via npm:
 
-npm install stix2vis
-Usage
+`npm install stix2vis`
 
-import React from 'react';
-import STIX2Visualization from 'stix2vis';
+### Usage
 
-const App = () => {
-return (
+`import React from 'react';`  
+`import StixViewerView from 'stix2vis';`
 
-<div>
-<h1>STIX2 Visualization</h1>
-<STIX2Visualization />
-</div>
-);
-}
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<STIX2Visualization stixJson={data}/>`  
+`</div>`  
+`);`  
+`}`  
+`export default App;`
 
-export default App;
+### Props
 
-Props
-data (optional): The STIX 2 JSON data to visualize. If not provided, the component will allow users to upload a file, paste JSON text, or provide a URL for an external JSON file.
+stixJson (required): The STIX 2 JSON data to visualize. If not provided, the component will render a sample json file,
+wrapStyle: style object that covers the style of outer wrapper of the visualisation
+graphStyle: style object that covers the style of the visualiser
 
-Example
-import React from 'react';
-import STIX2Visualization from 'react-stix2-visualization';
-import stixData from './data/sample_stix_data.json'; // Example JSON data
+### Example
 
-const App = () => {
-return (
+`import React from 'react';`  
+`import StixViewerView from 'stix2vis';`  
+`import stixData from './data/sample_stix_data.json'; // Example JSON data`
 
-<div>
-<h1>STIX2 Visualization</h1>
-<STIX2Visualization data={stixData} />
-</div>
-);
-}
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>`  
+`</div>`  
+`);`  
+`}`  
+`export default App;`
 
-export default App;
-Demo
+### Demo
+
 You can find a live demo of this component at https://github.com/navaneeth001/STIX2viz
 
-Contributing
+### Contributing
+
 Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-License
+### License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 Acknowledgements
@@ -63,16 +68,21 @@ This project is inspired by the STIX Visualization project from the OASIS CTI Op
 Support
 For any questions or support, please open an issue on GitHub.
 
-Author
+### Author
+
 Navaneeth001 / navaneethpqln@gmail.com
 
 Version
-Current version: 1.0.2
+Current version: 0.1.12
 
 Changelog
-1.0.2 (2024-02-14): Initial release.
-Roadmap
+0.1.12 (2024-02-14): Initial release.
+
+### Roadmap
+
 Add support for custom styling options.
+Make new views for selected node view
+Incoming and outgoing connecting view.
 Improve performance for handling large JSON datasets.
 Enhance accessibility features.
 Integrate with other STIX-related tools and libraries.

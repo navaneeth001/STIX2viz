@@ -1,13 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
-import Stixviewer from "./Stixviewer/Stixviewer";
+import React from 'react';
+import PropTypes from 'prop-types';
+import Stixviewer from './Stixviewer/Stixviewer';
 
-function App() {
-  return (
-    <div className="App">
-      <Stixviewer />
-    </div>
+function StixViewerView(props) {
+  const { stixJson, graphStyle, wrapStyle } = props;
+  return React.createElement('div', { className: 'App' },
+    React.createElement(Stixviewer, { 
+      stixJson: stixJson,
+      graphStyle: graphStyle,
+      wrapStyle: wrapStyle
+    })
   );
 }
 
-export default App;
+StixViewerView.propTypes = {
+  stixJson: PropTypes.object.isRequired,
+  graphStyle: React.CSSProperties,
+  wrapStyle: React.CSSProperties
+};
+
+export default StixViewerView;
