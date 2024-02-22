@@ -2,7 +2,7 @@
 
 ### This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.***https://oasis-open.github.io/cti-stix-visualization/***
 
-![Sample rendering of a STIX2 Json indicating malware, indicators and identity](./public/stix2.png)
+![Sample rendering of a STIX2 Json indicating malware, indicators and identity](public/stix2.png)
 
 ### Features
 
@@ -17,16 +17,16 @@ Install the package via npm:
 
 ### Usage
 
-`import React from 'react';`
+`import React from 'react';`  
 `import StixViewerView from 'stix2vis';`
 
-`const App = () => {`
-`return (`
-`<div>`
-`<STIX2Visualization stixJson={data}/>`
-`</div>`
-`);`
-`}`
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<STIX2Visualization stixJson={data}/>`  
+`</div>`  
+`);`  
+`}`  
 `export default App;`
 
 ### Props
@@ -37,17 +37,17 @@ graphStyle: style object that covers the style of the visualiser
 
 ### Example
 
-`import React from 'react';`
-`import StixViewerView from 'stix2vis';`
+`import React from 'react';`  
+`import StixViewerView from 'stix2vis';`  
 `import stixData from './data/sample_stix_data.json'; // Example JSON data`
 
-`const App = () => {`
-`return (`
-`<div>`
-`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>`
-`</div>`
-`);`
-`}`
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>`  
+`</div>`  
+`);`  
+`}`  
 `export default App;`
 
 ### Demo
