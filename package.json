@@ -1,7 +1,7 @@
 {
   "name": "stix2vis",
-  "version": "0.1.9",
-  "description": "A component for visualizing STIX data.",
+  "version": "0.1.11",
+  "description": "React component for visualizing STIX data.",
   "main": "src/App.js",
   "private": false,
   "dependencies": {

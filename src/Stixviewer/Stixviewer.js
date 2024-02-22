@@ -3,8 +3,6 @@ import stix2viz from "../stix2viz/stix2viz/stix2viz";
 import PropTypes from "prop-types";
 
 let graphView = null;
-let view = null;
-
 const TestJson = {
   type: "bundle",
   id: "bundle--63fe3b22-0201-47cf-85d0-97c02164528d",
@@ -107,10 +105,7 @@ const TestJson = {
 };
 
 const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
-  console.log("incoming stixJson data", stixJson);
-  console.log("props from stixviewer", wrapStyle, graphStyle);
   const stixData = stixJson;
-
   const graphContainer = useRef(null);
   const customConfig = {};
 
@@ -147,21 +142,15 @@ const Stixviewer = ({ stixJson = TestJson, graphStyle, wrapStyle }) => {
       "div",
       {
         style: {
-          display: "flex",
-          flexDirection: "row",
-          ...wrapStyle,
+          ...wrapStyle
         },
       },
       React.createElement("div", {
         id: "graphContainer",
         style: {
-          width: "1000px",
-          height: "600px",
-          border: "1px solid #ccc",
-          boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
-          borderRadius: "8px",
-          padding: "10px",
-          ...graphStyle,
+          width: 400,
+          height: 400,
+          ...graphStyle
         },
       })
     )
