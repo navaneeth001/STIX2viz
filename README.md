@@ -1,70 +1,88 @@
-# Getting Started with Create React App
+# Stix2Vis: Visualize STIX Data with Ease!
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository.***https://oasis-open.github.io/cti-stix-visualization/***
 
-## Available Scripts
+![Sample rendering of a STIX2 Json indicating malware, indicators and identity](public/stix2.png)
 
-In the project directory, you can run:
+### Features
 
-### `npm start`
+Rapid visualization of STIX 2.0 content using D3.js library.
+100% browser-based, ensuring data privacy as no data is transmitted to any server.
+Supports visualization of objects and relationships between them.
+Easily load JSON files,and it provides a relationship diagram as per oasis standards
+Installation
+Install the package via npm:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+`npm install stix2vis`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Usage
 
-### `npm test`
+`import React from 'react';`  
+`import StixViewerView from 'stix2vis';`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<STIX2Visualization stixJson={data}/>`  
+`</div>`  
+`);`  
+`}`  
+`export default App;`
 
-### `npm run build`
+### Props
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+stixJson (required): The STIX 2 JSON data to visualize. If not provided, the component will render a sample json file,
+wrapStyle: style object that covers the style of outer wrapper of the visualisation
+graphStyle: style object that covers the style of the visualiser
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Example
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`import React from 'react';`  
+`import StixViewerView from 'stix2vis';`  
+`import stixData from './data/sample_stix_data.json'; // Example JSON data`
 
-### `npm run eject`
+`const App = () => {`  
+`return (`  
+`<div>`  
+`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>`  
+`</div>`  
+`);`  
+`}`  
+`export default App;`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Demo
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+You can find a live demo of this component at https://github.com/navaneeth001/STIX2viz
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Contributing
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-## Learn More
+### License
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Acknowledgements
+This project is inspired by the STIX Visualization project from the OASIS CTI Open Repository. Special thanks to the contributors of that project.
 
-### Code Splitting
+Support
+For any questions or support, please open an issue on GitHub.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Author
 
-### Analyzing the Bundle Size
+Navaneeth001 / navaneethpqln@gmail.com
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Version
+Current version: 0.1.12
 
-### Making a Progressive Web App
+Changelog
+0.1.12 (2024-02-14): Initial release.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Roadmap
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Add support for custom styling options.
+Make new views for selected node view
+Incoming and outgoing connecting view.
+Improve performance for handling large JSON datasets.
+Enhance accessibility features.
+Integrate with other STIX-related tools and libraries.
