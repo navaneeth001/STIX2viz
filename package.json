@@ -1,9 +1,13 @@
 {
   "name": "stix2vis",
-  "version": "0.1.15",
+  "version": "0.1.19",
   "description": "React component for visualizing STIX data.",
   "main": "src/App.js",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/navaneeth001/STIX2viz"
+  },
   "dependencies": {
     "@babel/cli": "^7.23.9",
     "@babel/core": "^7.16.0",
