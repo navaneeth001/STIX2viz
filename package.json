@@ -1,6 +1,6 @@
 {
   "name": "stix2vis",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React component for visualizing STIX data.",
   "main": "src/App.js",
   "private": false,
@@ -83,7 +83,8 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "publish:build": "npm run build && npm publish"
   },
   "eslintConfig": {
     "extends": [
