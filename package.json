@@ -1,6 +1,6 @@
 {
   "name": "stix2vis",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "React component for visualizing STIX data.",
   "main": "src/App.js",
   "private": false,
@@ -79,7 +79,7 @@
     "oasis"
   ],
   "author": "Navaneeth Prakash",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",

@@ -1,17 +1,21 @@
 # Stix2Vis: Visualize STIX Data with Ease!
 
-![npm version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=js&r=r&ts=1683906897&type=6e&v=1.0.3&x2=0)
+![npm version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=js&r=r&ts=1683906897&type=6e&v=1.0.4&x2=0)
 
-### This React component enables developers to generate STIX2 visualizations from STIX 2 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository ***https://oasis-open.github.io/cti-stix-visualization/***
+### This React component enables developers to generate STIX2.1 visualizations from STIX 2.1 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository ***https://oasis-open.github.io/cti-stix-visualization/***
 
-![Sample rendering of a STIX2 Json indicating malware, indicators and identity](/public/stix2.png)
+![Sample rendering of a STIX2.1 Json indicating malware, indicators and identity](/public/stix2.png)
+
+### Bridging the Gap in Cyber Threat Intelligence
+
+Cyber Threat Intelligence (CTI) is all about storytelling. Information transforms into intelligence when given context and narrative, often crystallized in reports from intelligence providers. These reports, if structured and machine-readable, are supplemented with STIX2.1 bundles.
 
 ### Features
 
-Rapid visualization of STIX 2.0 content using D3.js library.
+Rapid visualization of STIX 2.1 content using D3.js library.
 100% browser-based, ensuring data privacy as no data is transmitted to any server.
 Supports visualization of objects and relationships between them.
-Easily load JSON files,and it provides a relationship diagram as per oasis standards
+Easily load JSON files,and it provides a relationship diagram as per OASIS standards
 Installation
 Install the package via npm:
 
@@ -33,9 +37,10 @@ Install the package via npm:
 
 ### Props
 
-stixJson (required): The STIX 2 JSON data to visualize. If not provided, the component will render a sample json file,
+stixJson (required): The STIX 2.1 JSON data to visualize. If not provided, the component will render a sample json file,
 wrapStyle: style object that covers the style of outer wrapper of the visualisation
 graphStyle: style object that covers the style of the visualiser
+onNodeclick: A callback function that is called when a node is clicked
 
 ### Example
 
@@ -46,7 +51,7 @@ graphStyle: style object that covers the style of the visualiser
 `const App = () => {`  
 `return (`  
 `<div>`  
-`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}}/>`  
+`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}} onNodeclick = ()=>{}/>`  
 `</div>`  
 `);`  
 `}`  
@@ -75,10 +80,10 @@ For any questions or support, please open an issue on GitHub.
 Navaneeth001 / navaneethpqln@gmail.com
 
 Version
-Current version: 0.1.12
+Current version: 1.0.4
 
 Changelog
-0.1.12 (2024-02-14): Initial release.
+1.0.4 (2024-07-18): Initial release.
 
 ### Roadmap
 
