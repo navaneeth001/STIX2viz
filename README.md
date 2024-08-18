@@ -1,6 +1,6 @@
 # Stix2Vis: Visualize STIX Data with Ease!
 
-![npm version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=js&r=r&ts=1683906897&type=6e&v=1.0.4&x2=0)
+![npm version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=js&r=r&ts=1683906897&type=6e&v=1.0.5&x2=0)
 
 ### This React component enables developers to generate STIX2.1 visualizations from STIX 2.1 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository ***https://oasis-open.github.io/cti-stix-visualization/***
 
@@ -80,10 +80,10 @@ For any questions or support, please open an issue on GitHub.
 Navaneeth001 / navaneethpqln@gmail.com
 
 Version
-Current version: 1.0.4
+Current version: 1.0.5
 
 Changelog
-1.0.4 (2024-07-18): Initial release.
+1.0.5 (2024-07-18): Initial release.
 
 ### Roadmap
 

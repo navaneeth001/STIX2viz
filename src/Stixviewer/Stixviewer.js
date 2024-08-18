@@ -16,7 +16,8 @@ const Stixviewer = ({
   function graphViewClickHandler(event, edgeDataSet, stixIdToObject) {
     if (event.nodes.length > 0) {
       // Handle node click event if needed
-      if (onNodeclick) onNodeclick();
+      const clickedNodeId = event.nodes[0]; // Get the ID of the clicked node
+      if (onNodeclick) onNodeclick(clickedNodeId);
     }
   }
 
