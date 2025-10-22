@@ -2,7 +2,14 @@
   "name": "stix2vis",
   "version": "1.0.5",
   "description": "React component for visualizing STIX data.",
-  "main": "src/App.js",
+  "main": "./dist/stix2vis.umd.js",
+  "module": "./dist/stix2vis.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/stix2vis.es.js",
+      "require": "./dist/stix2vis.umd.js"
+    }
+  },
   "private": false,
   "repository": {
     "type": "git",
@@ -81,9 +88,10 @@
   "author": "Navaneeth Prakash",
   "license": "BSD-3-Clause",
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "publish:build": "npm run build && npm publish"
   },
   "eslintConfig": {
@@ -159,5 +167,14 @@
     "presets": [
       "react-app"
     ]
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@types/prop-types": "^15.7.15",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.11"
   }
 }
