@@ -52,10 +52,8 @@
     "postcss-normalize": "^10.0.1",
     "postcss-preset-env": "^7.0.1",
     "prompts": "^2.4.2",
-    "react": "^18.2.0",
     "react-app-polyfill": "^3.0.0",
     "react-dev-utils": "^12.0.1",
-    "react-dom": "^18.2.0",
     "react-refresh": "^0.11.0",
     "requirejs": "^2.3.6",
     "resolve": "^1.20.0",
@@ -171,9 +169,11 @@
   "devDependencies": {
     "@types/node": "^24.9.1",
     "@types/prop-types": "^15.7.15",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.11"
   }
