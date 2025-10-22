@@ -15,7 +15,7 @@ const sampleData = {
       is_family: false,
     },
     {
-      type: "indicator",0
+      type: "indicator",
       spec_version: "2.1",
       id: "indicator--8e2e2d2b-17d4-4cbf-938f-98ee46b3cd3f",
       pattern_type: "stix",
