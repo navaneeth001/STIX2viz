@@ -9,6 +9,24 @@ A maintenance release that fixes packaging, build and lifecycle defects. **No
 public props, no rendering output and no STIX parsing/relationship logic were
 changed** — applications upgrading from 1.1.x keep working unchanged.
 
+### Why 1.1.5 and not 2.0.0
+
+Every documented entry point behaves as before: the default export is the same
+component, the four props are unchanged, the rendered DOM is identical, and all
+parsing/relationship logic is untouched. The changes are packaging, tooling and
+non-breaking fixes, so the release stays inside the `1.x` range and existing
+`^1.0.0` / `^1.1.0` ranges pick up the fix automatically. A major bump would
+leave consumers on 1.1.4, which cannot be used outside a webpack build
+(`main` pointed at `src/App.js`, and the sources call webpack's
+`require.context`).
+
+The single thing that is **not** carried forward is deep-importing into `src/`,
+for example `stix2vis/src/stix2viz/stix2viz/stix2viz.js`. Those files are not part
+of the public API, were never documented, and only ever worked inside webpack.
+If you depended on them, stay on `1.1.4`; the supported equivalent is the
+documented default export. (A first-class `stix2vis/core` entry point for the
+framework-agnostic graph builder is on the roadmap.)
+
 ### Fixed
 
 - **Package entry points no longer point at files that do not exist.**
@@ -81,7 +99,9 @@ defined` in Vite/Rollup/esbuild/Turbopack/SSR). The published package is now a
   unmount, multiple instances, error handling). These tests lock the current
   behaviour so future refactors cannot change it silently.
 - `npm run verify` — lint + format check + typecheck + tests + build + bundle
-  size + `publint` + `@arethetypeswrong/cli`, also wired to `prepublishOnly`.
+  size + `publint` + `@arethetypeswrong/cli` (run against the `dist/` tree rather
+  than `npm pack`'s tarball, so it does not break under `npm publish --dry-run`),
+  also wired to `prepublishOnly`.
 - `npm run dev` playground, `npm run coverage`, `npm run test:watch`.
 
 ## 1.1.4 and earlier
