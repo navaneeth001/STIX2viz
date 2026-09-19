@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STIX2viz — built UMD bundle demo</title>
+    <style>
+      body {
+        font:
+          14px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f7f9;
+        color: #1c1e21;
+      }
+      .panel {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #dcdfe4;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      code,
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      pre {
+        padding: 12px;
+        max-height: 140px;
+        overflow: auto;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <h1 style="margin-top: 0">STIX2viz — built bundle (UMD)</h1>
+      <p style="margin-top: 0; color: #4b5563">
+        This page loads <code>dist/stix2vis.umd.js</code> exactly as a CDN /
+        <code>&lt;script&gt;</code> consumer would, using React and ReactDOM UMD
+        builds. It is the artifact that ends up on npm — no build step, no
+        bundler. If this renders, the published package works in a browser.
+      </p>
+
+      <div class="row">
+        <input id="file" type="file" accept=".json,application/json" />
+        <button id="sample" type="button">Reload sample</button>
+        <span id="status" style="color: #4b5563"></span>
+      </div>
+
+      <p id="error" style="color: #a12b26"></p>
+
+      <div id="root"></div>
+
+      <h2 style="font-size: 16px">onNodeclick output (newest first)</h2>
+      <p id="clicks" style="color: #6b7280">Click a node in the graph…</p>
+    </div>
+
+    <!-- React 18 UMD builds, resolved from node_modules so this works offline -->
+    <script src="/node_modules/react/umd/react.development.js"></script>
+    <script src="/node_modules/react-dom/umd/react-dom.development.js"></script>
+    <!-- The published artifact under test -->
+    <script src="/dist/stix2vis.umd.js"></script>
+
+    <script>
+      var sample = {
+        type: "bundle",
+        id: "bundle--44af6c39-c09b-49c5-9de2-39fc22653b2d",
+        objects: [
+          {
+            type: "malware",
+            spec_version: "2.1",
+            id: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+            name: "Adversary-in-the-middle",
+            is_family: false,
+          },
+          {
+            type: "indicator",
+            spec_version: "2.1",
+            id: "indicator--8e2e2d2b-17d4-4cbf-938f-98ee46b3cd3f",
+            pattern_type: "stix",
+            pattern: "[file:hashes.'MD5' = 'd41d8cd98f00b204e9800998ecf8427e']",
+          },
+          {
+            type: "identity",
+            spec_version: "2.1",
+            id: "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
+            name: "Example Corp",
+            identity_class: "organization",
+          },
+          {
+            type: "infrastructure",
+            spec_version: "2.1",
+            id: "infrastructure--22222222-2222-4222-8222-222222222222",
+            name: "C2 infrastructure",
+            created_by_ref: "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
+          },
+          {
+            type: "relationship",
+            spec_version: "2.1",
+            id: "relationship--0d2d7b39-5b0b-4b1c-8a3c-4c4b41c88c8a",
+            relationship_type: "indicates",
+            source_ref: "indicator--8e2e2d2b-17d4-4cbf-938f-98ee46b3cd3f",
+            target_ref: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+          },
+        ],
+      };
+
+      var component = stix2vis.default || stix2vis;
+      var root = ReactDOM.createRoot(document.getElementById("root"));
+      var clicks = [];
+
+      function describe(value) {
+        if (Array.isArray(value)) return value.length + " objects (array)";
+        if (value && value.type === "bundle")
+          return (
+            "bundle containing " + ((value.objects || []).length || 0) + " objects"
+          );
+        return value ? "single " + value.type + " object" : "nothing to render";
+      }
+
+      function render(stixJson, label) {
+        document.getElementById("status").textContent =
+          label + " — " + describe(stixJson);
+        root.render(
+          React.createElement(component, {
+            stixJson: stixJson,
+            graphStyle: { width: "100%", height: 640 },
+            wrapStyle: { border: "1px solid #dcdfe4", borderRadius: 6 },
+            onNodeclick: function (nodeId) {
+              clicks.unshift(nodeId);
+              clicks = clicks.slice(0, 8);
+              document.getElementById("clicks").textContent = clicks.join(", ");
+            },
+          })
+        );
+      }
+
+      document.getElementById("sample").addEventListener("click", function () {
+        document.getElementById("error").textContent = "";
+        clicks = [];
+        render(sample, "bundled sample");
+      });
+
+      document.getElementById("file").addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var parsed = JSON.parse(String(reader.result));
+            document.getElementById("error").textContent = "";
+            clicks = [];
+            render(parsed, file.name);
+          } catch (error) {
+            document.getElementById("error").textContent =
+              "Could not parse " + file.name + ": " + error.message;
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      render(sample, "bundled sample");
+    </script>
+  </body>
+</html>

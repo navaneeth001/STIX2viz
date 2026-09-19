@@ -8,8 +8,13 @@
 # testing
 /coverage
 
-# production
+# production / build output (published from CI, never committed)
 /build
+/dist
+
+# tooling caches
+.vite
+*.tsbuildinfo
 
 # misc
 .DS_Store

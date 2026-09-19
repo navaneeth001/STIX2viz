@@ -1,95 +1,204 @@
-# Stix2Vis: Visualize STIX Data with Ease!
+# Stix2Vis — visualise STIX 2.1 as an interactive graph
 
-![npm version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=js&r=r&ts=1683906897&type=6e&v=1.0.5&x2=0)
+[![npm version](https://img.shields.io/npm/v/stix2vis.svg)](https://www.npmjs.com/package/stix2vis)
+[![CI](https://github.com/navaneeth001/STIX2viz/actions/workflows/ci.yml/badge.svg)](https://github.com/navaneeth001/STIX2viz/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/stix2vis.svg)](./LICENSE)
 
-### This React component enables developers to generate STIX2.1 visualizations from STIX 2.1 JSON files within their React applications. It is inspired by the STIX Visualization project from the OASIS CTI Open Repository ***https://oasis-open.github.io/cti-stix-visualization/***
+A React component that renders STIX 2.1 content — bundles, arrays of objects or a
+single object — as an interactive relationship graph. Everything runs entirely in
+the browser: your threat intel never leaves the page.
 
-![Sample rendering of a STIX2.1 Json indicating malware, indicators and identity](/public/stix2.png)
+Inspired by the
+[OASIS CTI STIX Visualisation](https://oasis-open.github.io/cti-stix-visualization/)
+project.
 
-### Bridging the Gap in Cyber Threat Intelligence
+![Sample rendering of a STIX 2.1 JSON showing malware, indicators and identities](/public/stix2.png)
 
-Cyber Threat Intelligence (CTI) is all about storytelling. Information transforms into intelligence when given context and narrative, often crystallized in reports from intelligence providers. These reports, if structured and machine-readable, are supplemented with STIX2.1 bundles.
+## Contents
 
-### Features
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Props](#props)
+- [Supported input](#supported-input)
+- [What gets rendered](#what-gets-rendered)
+- [Bundle formats](#bundle-formats)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
 
-Rapid visualization of STIX 2.1 content using D3.js library.
-100% browser-based, ensuring data privacy as no data is transmitted to any server.
-Supports visualization of objects and relationships between them.
-Easily load JSON files,and it provides a relationship diagram as per OASIS standards
-Installation
-Install the package via npm:
+## Install
 
-`npm install stix2vis`
+```bash
+npm install stix2vis
+```
 
-### Usage
+`react` is a peer dependency (`^18.2.0 || ^19.0.0`) — install it in your app (you
+almost certainly already have it). `react-dom` is **not** required. The published
+package has only three runtime dependencies (`vis-network`, `vis-data`,
+`prop-types`) and pulls in no build tooling.
 
-`import React from 'react';`  
-`import StixViewerView from 'stix2vis';`
+## Quick start
 
-`const App = () => {`  
-`return (`  
-`<div>`  
-`<StixViewerView stixJson={data}/>`  
-`</div>`  
-`);`  
-`}`  
-`export default App;`
+```jsx
+import StixViewerView from "stix2vis";
+import bundle from "./bundle.json"; // STIX 2.1 bundle
 
-### Props
+export default function App() {
+  return (
+    <div>
+      <StixViewerView stixJson={bundle} />
+    </div>
+  );
+}
+```
 
-stixJson (required): The STIX 2.1 JSON data to visualize. If not provided, the component will render a sample json file,
-wrapStyle: style object that covers the style of outer wrapper of the visualisation
-graphStyle: style object that covers the style of the visualiser
-onNodeclick: A callback function that is called when a node is clicked
+With styles and a click handler:
 
-### Example
+```jsx
+<StixViewerView
+  stixJson={bundle}
+  wrapStyle={{ backgroundColor: "white" }}
+  graphStyle={{ width: "100%", height: 600, backgroundColor: "white" }}
+  onNodeclick={(nodeId) => console.log("clicked", nodeId)}
+/>
+```
 
-`import React from 'react';`  
-`import StixViewerView from 'stix2vis';`  
-`import stixData from './data/sample_stix_data.json'; // Example JSON data`
+> **Note on the callback name:** the prop is `onNodeclick` (lower-case `c`). It
+> has been spelled that way since 1.0 and is kept as-is so existing integrations
+> keep working.
 
-`const App = () => {`  
-`return (`  
-`<div>`  
-`<StixViewerView stixJson={stixData} wrapStyle={{backgroundColor:'white'}} graphStyle={{backgroundColor:'white'}} onNodeclick = ()=>{}/>`  
-`</div>`  
-`);`  
-`}`  
-`export default App;`
+## Props
 
-### Demo
+| Prop          | Type                        | Required | Description                                                                                |
+| ------------- | --------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `stixJson`    | `object \| array \| string` | yes      | STIX 2.1 content to visualise (bundle, array of objects, single object, or a JSON string). |
+| `graphStyle`  | `React.CSSProperties`       | no       | Styles for the graph container, merged on top of the default `600x600`.                    |
+| `wrapStyle`   | `React.CSSProperties`       | no       | Styles for the wrapper element around the graph.                                           |
+| `onNodeclick` | `(nodeId: string) => void`  | no       | Called with the STIX id of the clicked node.                                               |
 
-You can find a live demo of this component at https://github.com/navaneeth001/STIX2viz
+Rendered DOM (stable contract — safe to target from CSS):
 
-### Contributing
+```html
+<div class="App">
+  <div>
+    <!-- wrapper, receives wrapStyle -->
+    <div id="graphContainer">
+      <!-- receives graphStyle, vis-network mounts here -->
+    </div>
+  </div>
+</div>
+```
 
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+## Supported input
 
-### License
+```js
+stixJson={bundle}                  // { type: "bundle", objects: [...] }
+stixJson={bundle.objects}          // array of STIX objects
+stixJson={{ type: "malware", ...}} // a single STIX object
+stixJson={jsonString}              // raw JSON text
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Invalid content throws a descriptive error (`Invalid STIX content: …`,
+`Invalid STIX object: requires at least type and id …`), and relationships whose
+endpoints are missing from the bundle are skipped with a `console.warn`.
 
-Acknowledgements
-This project is inspired by the STIX Visualization project from the OASIS CTI Open Repository. Special thanks to the contributors of that project.
+## What gets rendered
 
-Support
-For any questions or support, please open an issue on GitHub.
+- **Nodes** — one per STIX domain/custom object. `relationship` objects become
+  edges, never nodes.
+- **Labels** — taken from the object's `name`, then `value`, then `path`, and
+  finally the STIX type; duplicates are uniquified (`Example Corp(2)`) and long
+  labels are truncated to 40 characters.
+- **Edges** — built from two sources:
+  1. explicit `relationship` objects (`indicates`, `uses`, `targets`, …), and
+  2. embedded references inside objects, e.g. `created_by_ref` → `created-by`,
+     `object_marking_refs` → `applies-to`, `resolves_to_refs` → `resolves-to`,
+     `src_ref`/`dst_ref` on `network-traffic`, and so on.
+- **Icons** — a per-type STIX icon rendered as `circularImage` nodes in a
+  Barnes–Hut physics layout that stabilises and then freezes.
 
-### Author
+## Bundle formats
 
-Navaneeth001 / navaneethpqln@gmail.com
+| Consumer                                                   | Entry point               |
+| ---------------------------------------------------------- | ------------------------- |
+| Bundlers (Vite, webpack, Next, Rollup, esbuild, Turbopack) | `dist/stix2vis.mjs` (ESM) |
+| Node `require()` / TypeScript `node16`                     | `dist/stix2vis.cjs` (CJS) |
+| `<script>` tag / CDN                                       | `dist/stix2vis.umd.js`    |
+| Type definitions                                           | `dist/index.d.ts`         |
 
-Version
-Current version: 1.0.5
+All formats are produced from the same source, so behaviour is identical
+everywhere. React is always external (consumers use their own copy, which avoids
+the "two Reacts / invalid hook call" class of bugs) and the published icons are
+inlined as data URIs so nothing has to be served from a particular path.
 
-Changelog
-1.0.5 (2024-07-18): Initial release.
+```html
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/stix2vis/dist/stix2vis.umd.js"></script>
+<script>
+  // the UMD global *is* the component
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(React.createElement(stix2vis, { stixJson: myBundle }));
+</script>
+```
 
-### Roadmap
+## Development
 
-Add support for custom styling options.
-Make new views for selected node view
-Incoming and outgoing connecting view.
-Improve performance for handling large JSON datasets.
-Enhance accessibility features.
-Integrate with other STIX-related tools and libraries.
+Requires Node `^22.12.0 || ^24.0.0` (see `.nvmrc`) — the toolchain (Vitest 5,
+Vite 8, jsdom 30) does not support odd-numbered Node releases such as 23 or 25.
+
+```bash
+npm install
+
+npm run dev          # Vite playground at http://localhost:5173
+npm run build        # dist/stix2vis.{mjs,cjs,umd.js} + dist/index.d.ts + .d.mts
+npm test             # Vitest behaviour-locking suite
+npm run coverage     # coverage report
+npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint 10 (flat config)
+npm run format       # Prettier
+npm run size         # bundle-size budget
+npm run verify       # all of the above + publint + attw; also runs on prepublishOnly
+```
+
+`dist/` is intentionally not committed — it is generated by `npm run build`, by
+`prepublishOnly` before publishing and by CI. Releases are published with
+`npm publish` from a clean, tagged commit, or via the **Publish to npm** workflow
+(which publishes with provenance).
+
+## Contributing
+
+Issues and pull requests are welcome. Please run `npm run verify` before opening
+a PR: it runs linting, formatting, type checking, the test suite, the build, a
+bundle budget check and package/type-resolution checks (`publint`,
+`@arethetypeswrong/cli`). Behaviour is locked by tests, so if a change to
+`makeGraphData` output is intentional, update the expectations in
+`src/stix2viz/stix2viz/stix2viz.test.ts` deliberately.
+
+## Roadmap
+
+- Expose the framework-agnostic graph builder as a documented `stix2vis/core`
+  entry point (today only the React component is public).
+- Let consumers supply their own icon set (`iconDir` / `iconResolver`), so the
+  inlined icon payload can be moved out of the JS bundle.
+- Render the type legend that is already computed, plus type toggles and search.
+- Selected-node detail panel and incoming/outgoing relationship views.
+- STIX 2.0 `observed-data.objects` support and deterministic edge ids.
+- Optional WebGL renderer for very large bundles (>5k objects).
+- Accessibility: keyboard navigation and a table-view fallback.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+
+## Acknowledgements
+
+Inspired by the STIX Visualisation project from the OASIS CTI Open Repository.
+Thanks to all contributors of that project.
+
+## Support
+
+Questions or problems? Please
+[open an issue](https://github.com/navaneeth001/STIX2viz/issues).
+
+**Author:** Navaneeth001 — navaneethpqln@gmail.com

@@ -73,7 +73,9 @@ let embeddedRelationships: Map<string | null, [string, string, boolean][]> =
     ["windows-registry-key", [["creator_user_ref", "created-by", true]]],
   ]);
 
-let valueOps = new Map([
+type ValueOp = (value: any, operand: any) => boolean;
+
+let valueOps = new Map<string, ValueOp>([
   ["$eq", (a, b) => a === b],
   ["$gt", (a, b) => a > b],
   ["$gte", (a, b) => a >= b],
@@ -81,7 +83,7 @@ let valueOps = new Map([
   ["$lt", (a, b) => a < b],
   ["$lte", (a, b) => a <= b],
   ["$ne", (a, b) => a !== b],
-  ["$nin", (val: any, arr: any[]) => !arr.includes(val)],
+  ["$nin", (val, arr) => !arr.includes(val)],
 ]);
 
 class STIXContentError extends Error {
@@ -289,7 +291,9 @@ function mongoishMatchObject(value: any, criteria: any): boolean {
 
   if (result) {
     for (let [op, operand] of valueCriteria) {
-      let opFunc = valueOps.get(op);
+      // `valueOps` is the only source of keys in `valueCriteria`, so this
+      // lookup always resolves. The cast is compile-time only.
+      let opFunc = valueOps.get(op) as ValueOp;
       result &&= opFunc(value, operand);
 
       if (!result) break;
@@ -437,13 +441,11 @@ function makeLegendData(
 ): [Map<string, string>, string] {
   let iconPath: string | null = null;
   if (config) iconPath = config.get("iconDir");
-  console.log("iconPath1 from stix2viz", iconPath);
 
   let defaultIconURL = getDefaultIconURL(iconPath);
 
   let stixTypes: Set<string> = new Set();
 
-  console.log("stixIdToObject from makeLegendData", stixIdToObject);
   if (stixIdToObject)
     for (let object of stixIdToObject.values()) {
       let stixType = object.get("type");
@@ -460,7 +462,6 @@ function makeLegendData(
     }
 
     let iconURL = stixTypeToIconURL(type, iconPath, iconFileName);
-    console.log("iconUrls", iconURL);
     iconURLs.set(type, iconURL);
   }
 
@@ -548,11 +549,10 @@ class GraphView extends STIXContentView {
     this.#edgeDataSet = edgeDataSet;
 
     this.#nodeDataSet = new DataSet();
-    console.log("this.#nodeDataSet", this.#nodeDataSet);
     nodeDataSet?.forEach((item, id) => {
       this.#nodeDataSet.add({
         ...item,
-        group: stixIdToObject.get(id).get("type"),
+        group: stixIdToObject.get(id as string).get("type"),
       });
     });
 
@@ -604,7 +604,6 @@ class GraphView extends STIXContentView {
         stabilization: true,
       },
     };
-    console.log("graphOpts2", graphOpts);
     this.#network = new visjs.Network(domElement, graphData, graphOpts);
   }
 
@@ -633,9 +632,15 @@ class GraphView extends STIXContentView {
 
     let groups: any = {};
 
-    const images = import.meta.glob("../stix2viz/icons/*.{png,svg}");
+    // Icons must be resolved to URL/data-URI strings up front: without
+    // `eager: true` the glob yields lazy loader functions, which vis-network's
+    // `image` option cannot use. This preserves the behaviour of the previous
+    // webpack `require.context(...)` lookup used by 1.x releases.
+    const images: Record<string, string> = import.meta.glob(
+      "../stix2viz/icons/*.{png,svg}",
+      { eager: true, import: "default" }
+    );
     for (let [stixType, iconURL] of iconURLs) {
-      console.log("image url", iconURLs);
       const imageName = iconURL.substring(iconURL.lastIndexOf("/") + 1);
       const imagePath = `../stix2viz/icons/${imageName}`;
       if (images[imagePath]) {
@@ -923,7 +928,6 @@ function makeGraphData(
   stixContent: any,
   config: Map<string, any> | null = null
 ): [DataSet<any>, DataSet<any>, Map<string, any>] {
-  console.log("data from makegraphdata", visjs, stixContent);
   if (config !== null) config = normalizeConfig(config);
 
   let stixObjects = normalizeContent(stixContent);
@@ -937,9 +941,6 @@ function makeGraphData(
 
   let nodeDataSet = new DataSet(nodes);
   let edgeDataSet = new DataSet(edges);
-  console.log("nodes and edges", nodeDataSet, edgeDataSet);
-  console.log("nodeDataSet and edgeDataSet", nodeDataSet, edgeDataSet);
-
   return [nodeDataSet, edgeDataSet, stixIdToObject];
 }
 
