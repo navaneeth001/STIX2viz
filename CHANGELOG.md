@@ -3,6 +3,12 @@
 All notable changes to this project are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 1.2.1
+
+A patch re-release of 1.2.0 (an earlier `1.2.0` tag was already taken on the
+registry, so this version republishes the same release under a new number).
+No code changes relative to the 1.2.0 release notes below.
+
 ## 1.2.0
 
 An additive release aimed at analyst workflows. **Every existing prop, callback
