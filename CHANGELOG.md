@@ -3,6 +3,43 @@
 All notable changes to this project are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 1.2.0
+
+An additive release aimed at analyst workflows. **Every existing prop, callback
+and DOM contract is unchanged** — applications rendering the component with no
+new props see byte-for-byte identical output. All new features are opt-in.
+
+### Added
+
+- **`config` prop** — exposes the graph builder's configuration directly:
+  `include`/`exclude` filter criteria (`$eq`, `$in`, `$and`, `$or`, `$not`,
+  `$exists`), `userLabels`, and per-type `displayProperty`, `displayIcon` and
+  `embeddedRelationships`. The graph only rebuilds when the config _content_
+  changes, not on object identity.
+- **Richer selection callbacks.** `onNodeSelect(nodeId, stixObject)` passes the
+  clicked node's full STIX object as plain JSON; `onEdgeSelect(edgeId,
+relationship)` resolves explicit relationship edges to their STIX object
+  (`null` for embedded-reference edges); `onSelectionChange({ nodes, edges })`
+  fires on every click including deselection. The 1.x `onNodeclick` contract is
+  unchanged.
+- **`onError` callback** — reports graph-creation and toolbar-action failures
+  to the application (the existing `console.error` reporting is kept).
+- **`showDanglingRefs`** — renders faded "ghost" nodes for objects referenced
+  by the bundle but missing from it (TLP markings, identities, observables),
+  so dangling relationships stay visible instead of being silently dropped.
+  Default `false`: the 1.x warn-and-drop behaviour is locked by tests.
+- **`showDetailsPanel`** — a detail panel below the graph for the selected
+  node: key fields, a full-JSON viewer and a copy button. Clears on empty-canvas
+  clicks; explains nodes with no backing STIX object. Default `false`.
+- **`showToolbar`** — a toolbar with a search box (STIX id or label substring,
+  select-and-centre), per-type legend toggles, **Export PNG** (canvas snapshot)
+  and **Export JSON** (currently visible nodes/edges). Default `false`.
+- **STIX 2.0 `observed-data.objects` support** — embedded observables are
+  rendered as nodes connected to the observed-data node with `refers-to`
+  edges, mirroring the 2.1 `object_refs` behaviour. 2.1 content is unaffected.
+- New `GraphView` API surface: `iconGroups` (resolved per-type icon styles) and
+  `focusNode(stixId)`.
+
 ## 1.1.5
 
 A maintenance release that fixes packaging, build and lifecycle defects. **No

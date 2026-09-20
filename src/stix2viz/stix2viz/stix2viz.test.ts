@@ -236,3 +236,223 @@ describe("makeGraphData error handling", () => {
     expect(warn).toHaveBeenCalled();
   });
 });
+
+describe("makeGraphData STIX 2.0 observed-data", () => {
+  const OBSERVED = "observed-data--77777777-7777-4777-8777-777777777777";
+
+  it("renders embedded 2.0 objects as nodes referred to by the observed-data", () => {
+    const [nodes, edges] = stix2viz.makeGraphData({
+      type: "bundle",
+      id: BUNDLE,
+      objects: [
+        {
+          type: "observed-data",
+          id: OBSERVED,
+          first_observed: "2020-01-01T00:00:00.000Z",
+          last_observed: "2020-01-01T00:00:00.000Z",
+          number_observed: 1,
+          objects: {
+            0: { type: "file", name: "evil.exe" },
+            1: { type: "ipv4-addr", value: "1.2.3.4" },
+          },
+        },
+      ],
+    });
+
+    expect(nodes.length).toBe(3);
+    expect(nodes.get(OBSERVED)).toBeTruthy();
+    expect(nodes.get(OBSERVED + ".objects.0").label).toBe("evil.exe");
+    expect(nodes.get(OBSERVED + ".objects.0").group).toBe("file");
+    expect(nodes.get(OBSERVED + ".objects.1").label).toBe("1.2.3.4");
+    expect(nodes.get(OBSERVED + ".objects.1").group).toBe("ipv4-addr");
+
+    expect(edgeSummary(edges)).toEqual([
+      { from: OBSERVED, to: OBSERVED + ".objects.0", label: "refers-to" },
+      { from: OBSERVED, to: OBSERVED + ".objects.1", label: "refers-to" },
+    ]);
+  });
+
+  it("still resolves 2.1 object_refs on observed-data (locked behaviour)", () => {
+    const scoId = "file:88888888-8888-4888-8888-888888888888";
+    const [nodes, edges] = stix2viz.makeGraphData({
+      type: "bundle",
+      id: BUNDLE,
+      objects: [
+        {
+          type: "observed-data",
+          id: OBSERVED,
+          first_observed: "2020-01-01T00:00:00.000Z",
+          number_observed: 1,
+          object_refs: [scoId],
+        },
+        { type: "file", id: scoId, name: "ref.exe" },
+      ],
+    });
+
+    expect(nodes.length).toBe(2);
+    expect(edgeSummary(edges)).toEqual([
+      { from: OBSERVED, to: scoId, label: "refers-to" },
+    ]);
+  });
+
+  it("ignores 2.0 objects entries that are not a mapping", () => {
+    const [nodes, edges] = stix2viz.makeGraphData({
+      type: "bundle",
+      id: BUNDLE,
+      objects: [
+        {
+          type: "observed-data",
+          id: OBSERVED,
+          first_observed: "2020-01-01T00:00:00.000Z",
+          number_observed: 1,
+          objects: { 0: "not-an-object" },
+        },
+      ],
+    });
+
+    expect(nodes.length).toBe(1);
+    expect(edges.length).toBe(0);
+  });
+});
+
+describe("makeGraphData dangling references", () => {
+  const MISSING_IDENTITY = IDENTITY_1; // referenced but never defined
+  const MISSING_INDICATOR = INDICATOR; // referenced but never defined
+
+  function danglingBundle() {
+    return {
+      type: "bundle",
+      id: BUNDLE,
+      objects: [
+        {
+          type: "malware",
+          id: MALWARE,
+          name: "Lonely",
+          created_by_ref: MISSING_IDENTITY,
+        },
+        {
+          type: "relationship",
+          id: RELATIONSHIP,
+          relationship_type: "indicates",
+          source_ref: MISSING_INDICATOR,
+          target_ref: MALWARE,
+        },
+      ],
+    };
+  }
+
+  it("warns and drops by default (locked legacy behaviour)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const [nodes, edges] = stix2viz.makeGraphData(danglingBundle());
+
+    expect(nodes.length).toBe(1);
+    expect(edges.length).toBe(0);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("creates ghost nodes for missing endpoints when showDanglingRefs is set", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const [nodes, edges] = stix2viz.makeGraphData(danglingBundle(), {
+      showDanglingRefs: true,
+    });
+
+    // Malware + two ghost nodes (identity, indicator).
+    expect(nodes.length).toBe(3);
+
+    const ghost = nodes.get(MISSING_IDENTITY);
+    expect(ghost).toMatchObject({ dangling: true, group: "identity" });
+    expect(ghost.label).toBe("identity");
+
+    expect(edgeSummary(edges)).toEqual(
+      expect.arrayContaining([
+        { from: MALWARE, to: MISSING_IDENTITY, label: "created-by" },
+        { from: MISSING_INDICATOR, to: MALWARE, label: "indicates" },
+      ])
+    );
+    expect(edges.length).toBe(2);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates repeated references to the same missing object", () => {
+    const [nodes, edges] = stix2viz.makeGraphData(
+      {
+        type: "bundle",
+        id: BUNDLE,
+        objects: [
+          {
+            type: "malware",
+            id: MALWARE,
+            name: "First",
+            created_by_ref: MISSING_IDENTITY,
+          },
+          {
+            type: "malware",
+            id: IDENTITY_2,
+            name: "Second",
+            created_by_ref: MISSING_IDENTITY,
+          },
+        ],
+      },
+      { showDanglingRefs: true }
+    );
+
+    // Two malware nodes + exactly one ghost for the missing identity.
+    expect(nodes.length).toBe(3);
+    expect(edges.length).toBe(2);
+  });
+
+  it("still skips relationships whose endpoint ids are unusable", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const relationshipRefId =
+      "relationship--00000000-0000-4000-8000-000000000000";
+
+    const [nodes, edges] = stix2viz.makeGraphData(
+      {
+        type: "bundle",
+        id: BUNDLE,
+        objects: [
+          { type: "malware", id: MALWARE, name: "Lonely" },
+          {
+            type: "relationship",
+            id: RELATIONSHIP,
+            relationship_type: "weird",
+            source_ref: relationshipRefId,
+            target_ref: MALWARE,
+          },
+        ],
+      },
+      { showDanglingRefs: true }
+    );
+
+    expect(nodes.length).toBe(1);
+    expect(edges.length).toBe(0);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("renders ghost nodes for missing embedded references such as markings", () => {
+    const markingRefId =
+      "marking-definition--aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+    const [, edges] = stix2viz.makeGraphData(
+      {
+        type: "bundle",
+        id: BUNDLE,
+        objects: [
+          {
+            type: "malware",
+            id: MALWARE,
+            name: "Marked",
+            object_marking_refs: [markingRefId],
+          },
+        ],
+      },
+      { showDanglingRefs: true }
+    );
+
+    expect(edgeSummary(edges)).toEqual([
+      { from: markingRefId, to: MALWARE, label: "applies-to" },
+    ]);
+  });
+});

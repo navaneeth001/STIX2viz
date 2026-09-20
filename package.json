@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "stix2vis",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "React component that turns STIX 2.1 content into an interactive relationship graph, entirely in the browser.",
   "keywords": [
     "react",

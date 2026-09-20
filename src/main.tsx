@@ -23,6 +23,9 @@ const sampleData = {
       name: "Adversary-in-the-middle",
       description: "This is a custom description for Adversary-in-the-middle.",
       is_family: false,
+      // Referenced but not bundled: demonstrates the ghost nodes that
+      // `showDanglingRefs` renders for missing objects.
+      created_by_ref: "identity--11111111-1111-4111-8111-111111111111",
     },
     {
       type: "indicator",
@@ -98,7 +101,16 @@ function Playground() {
   const [source, setSource] = useState("bundled sample");
   const [clicks, setClicks] = useState<string[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showToolbar, setShowToolbar] = useState(true);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(true);
+  const [showDanglingRefs, setShowDanglingRefs] = useState(true);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  const featureToggles: [string, boolean, (v: boolean) => void][] = [
+    ["Toolbar (search / legend / export)", showToolbar, setShowToolbar],
+    ["Detail panel", showDetailsPanel, setShowDetailsPanel],
+    ["Dangling-reference ghosts", showDanglingRefs, setShowDanglingRefs],
+  ];
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -159,12 +171,43 @@ function Playground() {
 
         {loadError ? <div style={styles.error}>{loadError}</div> : null}
 
+        <div style={{ ...styles.row, marginBottom: 8 }}>
+          {featureToggles.map(([label, value, setter]) => (
+            <label key={label} style={{ fontSize: 13 }}>
+              <input
+                type="checkbox"
+                checked={value}
+                onChange={(e) => setter(e.target.checked)}
+              />{" "}
+              {label}
+            </label>
+          ))}
+        </div>
+
         <Stixviewer
           stixJson={stixJson}
           graphStyle={{ width: "100%", height: 640 }}
           wrapStyle={{ border: "1px solid #dcdfe4", borderRadius: 6 }}
+          showToolbar={showToolbar}
+          showDetailsPanel={showDetailsPanel}
+          showDanglingRefs={showDanglingRefs}
           onNodeclick={(nodeId) =>
-            setClicks((previous) => [nodeId, ...previous].slice(0, 8))
+            setClicks((previous) =>
+              [`node: ${nodeId}`, ...previous].slice(0, 8)
+            )
+          }
+          onEdgeSelect={(edgeId, relationship) =>
+            setClicks((previous) =>
+              [
+                `edge: ${edgeId} (${
+                  relationship?.relationship_type ?? "embedded ref"
+                })`,
+                ...previous,
+              ].slice(0, 8)
+            )
+          }
+          onError={(error) =>
+            setLoadError(`Viewer error: ${(error as Error).message}`)
           }
         />
 

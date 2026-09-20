@@ -21,6 +21,9 @@ project.
 - [Props](#props)
 - [Supported input](#supported-input)
 - [What gets rendered](#what-gets-rendered)
+- [Filtering and labelling with `config`](#filtering-and-labelling-with-config)
+- [Dangling references (`showDanglingRefs`)](#dangling-references-showdanglingrefs)
+- [Toolbar and detail panel](#toolbar-and-detail-panel)
 - [Bundle formats](#bundle-formats)
 - [Development](#development)
 - [Contributing](#contributing)
@@ -69,12 +72,24 @@ With styles and a click handler:
 
 ## Props
 
-| Prop          | Type                        | Required | Description                                                                                |
-| ------------- | --------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `stixJson`    | `object \| array \| string` | yes      | STIX 2.1 content to visualise (bundle, array of objects, single object, or a JSON string). |
-| `graphStyle`  | `React.CSSProperties`       | no       | Styles for the graph container, merged on top of the default `600x600`.                    |
-| `wrapStyle`   | `React.CSSProperties`       | no       | Styles for the wrapper element around the graph.                                           |
-| `onNodeclick` | `(nodeId: string) => void`  | no       | Called with the STIX id of the clicked node.                                               |
+| Prop                | Type                                             | Required | Description                                                                                                                                             |
+| ------------------- | ------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stixJson`          | `object \| array \| string`                      | yes      | STIX 2.1 content to visualise (bundle, array of objects, single object, or a JSON string).                                                              |
+| `graphStyle`        | `React.CSSProperties`                            | no       | Styles for the graph container, merged on top of the default `600x600`.                                                                                 |
+| `wrapStyle`         | `React.CSSProperties`                            | no       | Styles for the wrapper element around the graph.                                                                                                        |
+| `onNodeclick`       | `(nodeId: string) => void`                       | no       | Called with the STIX id of the clicked node.                                                                                                            |
+| `onNodeSelect`      | `(nodeId, stixObject \| null) => void`           | no       | Called with the clicked node's STIX id and its full STIX object (as plain JSON). `stixObject` is `null` for nodes without a backing object (see below). |
+| `onEdgeSelect`      | `(edgeId, relationship \| null) => void`         | no       | Called with the clicked edge's id and the backing STIX `relationship` object, or `null` for edges derived from embedded references.                     |
+| `onSelectionChange` | `({ nodes: string[], edges: string[] }) => void` | no       | Called on every click with the current selection (empty arrays = deselection).                                                                          |
+| `onError`           | `(error: unknown) => void`                       | no       | Called when graph creation or a toolbar action fails (in addition to the existing `console.error`).                                                     |
+| `config`            | `object`                                         | no       | Graph-builder configuration: `include`/`exclude` filters, `userLabels`, per-type `displayProperty`/`displayIcon`/`embeddedRelationships`.               |
+| `showDanglingRefs`  | `boolean`                                        | no       | Render faded "ghost" nodes for objects referenced by the bundle but missing from it (default `false`).                                                  |
+| `showDetailsPanel`  | `boolean`                                        | no       | Show a detail panel for the selected node (default `false`).                                                                                            |
+| `showToolbar`       | `boolean`                                        | no       | Show the toolbar: search, per-type legend toggles, PNG/JSON export (default `false`).                                                                   |
+
+All new props are optional and default-off: applications that render
+`<StixViewerView stixJson={bundle} />` see exactly the same graph and DOM as
+in 1.x.
 
 Rendered DOM (stable contract — safe to target from CSS):
 
@@ -82,12 +97,16 @@ Rendered DOM (stable contract — safe to target from CSS):
 <div class="App">
   <div>
     <!-- wrapper, receives wrapStyle -->
+    <!-- optional .stix2vis-toolbar, only when showToolbar is set -->
     <div id="graphContainer">
       <!-- receives graphStyle, vis-network mounts here -->
     </div>
+    <!-- optional .stix2vis-details, only when showDetailsPanel is set and a node is selected -->
   </div>
 </div>
 ```
+
+Without the new optional props the DOM is byte-for-byte identical to 1.x.
 
 ## Supported input
 
@@ -100,12 +119,15 @@ stixJson={jsonString}              // raw JSON text
 
 Invalid content throws a descriptive error (`Invalid STIX content: …`,
 `Invalid STIX object: requires at least type and id …`), and relationships whose
-endpoints are missing from the bundle are skipped with a `console.warn`.
+endpoints are missing from the bundle are skipped with a `console.warn` —
+unless `showDanglingRefs` is enabled (below).
 
 ## What gets rendered
 
 - **Nodes** — one per STIX domain/custom object. `relationship` objects become
-  edges, never nodes.
+  edges, never nodes. STIX 2.0 `observed-data` objects additionally render one
+  node per embedded observable in their `objects` dictionary (connected with
+  `refers-to` edges), mirroring the 2.1 `object_refs` behaviour.
 - **Labels** — taken from the object's `name`, then `value`, then `path`, and
   finally the STIX type; duplicates are uniquified (`Example Corp(2)`) and long
   labels are truncated to 40 characters.
@@ -116,6 +138,61 @@ endpoints are missing from the bundle are skipped with a `console.warn`.
      `src_ref`/`dst_ref` on `network-traffic`, and so on.
 - **Icons** — a per-type STIX icon rendered as `circularImage` nodes in a
   Barnes–Hut physics layout that stabilises and then freezes.
+
+## Filtering and labelling with `config`
+
+The graph builder's configuration is now exposed directly as a prop:
+
+```jsx
+<StixViewerView
+  stixJson={bundle}
+  config={{
+    // Mongo-ish filters, combinable with $and/$or/$not/$in/$exists…
+    include: { type: { $in: ["indicator", "malware", "relationship"] } },
+    exclude: { type: "marking-definition" },
+    // Override labels for specific objects.
+    userLabels: { "indicator--8e2e2d2b-…": "C2 domain (high confidence)" },
+    // Per-type label source and icon.
+    "attack-pattern": { displayProperty: "external_references.0.external_id" },
+  }}
+/>
+```
+
+## Dangling references (`showDanglingRefs`)
+
+Real threat-intel feeds frequently reference objects that are not included in
+the bundle (TLP markings, identities, observables). By default those
+relationships are skipped with a warning, as in 1.x. With
+`showDanglingRefs` enabled, missing endpoints are rendered as faded
+**ghost nodes** labelled with their STIX type, so the relationships stay
+visible and auditable:
+
+```jsx
+<StixViewerView stixJson={bundle} showDanglingRefs />
+```
+
+Clicking a ghost node shows "no STIX object behind it" in the detail panel,
+and `onNodeSelect` receives `null` as the object.
+
+## Toolbar and detail panel
+
+```jsx
+<StixViewerView
+  stixJson={bundle}
+  showToolbar
+  showDetailsPanel
+  onNodeSelect={(id, obj) => console.log(id, obj)}
+/>
+```
+
+- **Toolbar** — a search box (matches STIX id exactly, or label substring;
+  selects and centres the match), a legend of the STIX types present that
+  toggles each type's visibility, and **Export PNG** (canvas snapshot) and
+  **Export JSON** (the currently visible nodes/edges) buttons.
+- **Detail panel** — shown below the graph when a node is clicked: the
+  object's key fields (`type`, `name`/`value`, `description`, `pattern`,
+  timestamps, labels, confidence, …), a full-JSON viewer and a copy button.
+  Clicking empty space clears it.
 
 ## Bundle formats
 
@@ -208,9 +285,9 @@ bundle budget check and package/type-resolution checks (`publint`,
   entry point (today only the React component is public).
 - Let consumers supply their own icon set (`iconDir` / `iconResolver`), so the
   inlined icon payload can be moved out of the JS bundle.
-- Render the type legend that is already computed, plus type toggles and search.
-- Selected-node detail panel and incoming/outgoing relationship views.
-- STIX 2.0 `observed-data.objects` support and deterministic edge ids.
+- TLP/marking-aware colouring and MITRE ATT&CK technique badges.
+- Hover tooltips, 1-hop neighbourhood focus, timeline filtering.
+- STIX pattern highlighting and a bundle diff view.
 - Optional WebGL renderer for very large bundles (>5k objects).
 - Accessibility: keyboard navigation and a table-view fallback.
 

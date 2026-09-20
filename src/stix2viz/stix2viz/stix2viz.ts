@@ -527,12 +527,15 @@ class STIXContentView {
   toggleStixType(stixType: string) {}
 
   selectNode(stixId: string) {}
+
+  focusNode(stixId: string) {}
 }
 
 class GraphView extends STIXContentView {
   #nodeDataSet: DataSet<any>;
   #edgeDataSet: DataSet<any>;
   #network: any;
+  #groups: any;
 
   constructor(
     visjs: any,
@@ -552,11 +555,13 @@ class GraphView extends STIXContentView {
     nodeDataSet?.forEach((item, id) => {
       this.#nodeDataSet.add({
         ...item,
-        group: stixIdToObject.get(id as string).get("type"),
+        // Nodes built by `makeNodesAndEdges` carry their own group (STIX
+        // type); the fallback covers nodes constructed by other means.
+        group: item.group ?? stixIdToObject.get(id as string)?.get("type"),
       });
     });
 
-    let groups = this.#makeGroups();
+    this.#groups = this.#makeGroups();
 
     let graphData = {
       nodes: this.#nodeDataSet,
@@ -564,7 +569,7 @@ class GraphView extends STIXContentView {
     };
 
     let graphOpts = {
-      groups: groups,
+      groups: this.#groups,
       nodes: {
         color: {
           border: "black",
@@ -617,6 +622,16 @@ class GraphView extends STIXContentView {
 
   get edgeDataSet(): DataSet<any> {
     return this.#edgeDataSet;
+  }
+
+  /**
+   * The resolved vis-network group styles (one per STIX type that has a
+   * bundled icon), mapping type -> { shape, image, brokenImage }. Exposed so
+   * consumers (e.g. the optional toolbar legend) can render the same icons
+   * the graph uses.
+   */
+  get iconGroups(): any {
+    return this.#groups;
   }
 
   on(...args: any[]) {
@@ -726,6 +741,10 @@ class GraphView extends STIXContentView {
     this.graph.selectNodes([stixId]);
   }
 
+  focusNode(stixId: string) {
+    this.graph.focus(stixId, { scale: 1.2, animation: true });
+  }
+
   enablePhysics() {
     this.#network.setOptions({ physics: true });
   }
@@ -737,25 +756,64 @@ class GraphView extends STIXContentView {
 
 function edgeForRelationship(
   stixRel: Map<string, any>,
-  stixIdToObject: Map<string, any>
+  stixIdToObject: Map<string, any>,
+  showDanglingRefs: boolean = false,
+  ghostNodes: any[] = [],
+  ghostIds: Set<string> = new Set()
 ): any | null {
   let sourceRef = stixRel.get("source_ref");
   let targetRef = stixRel.get("target_ref");
   let relType = stixRel.get("relationship_type");
 
-  let edge = null;
-  if (stixIdToObject.has(sourceRef) && stixIdToObject.has(targetRef)) {
-    if (isStixIdValidForNode(sourceRef) && isStixIdValidForNode(targetRef))
-      edge = makeEdgeObject(sourceRef, targetRef, relType, stixRel.get("id"));
-  } else
-    console.warn(
-      "Skipped relationship %s %s %s: missing endpoint object(s)",
-      sourceRef,
-      relType,
-      targetRef
-    );
+  let sourceMissing = !stixIdToObject.has(sourceRef);
+  let targetMissing = !stixIdToObject.has(targetRef);
 
-  return edge;
+  if (sourceMissing || targetMissing) {
+    if (!showDanglingRefs) {
+      console.warn(
+        "Skipped relationship %s %s %s: missing endpoint object(s)",
+        sourceRef,
+        relType,
+        targetRef
+      );
+
+      return null;
+    }
+
+    // Render the relationship anyway, using ghost nodes for the endpoints
+    // that are missing from the bundle.
+    let endpointsRenderable = true;
+
+    if (sourceMissing) {
+      if (isStixIdValidForNode(sourceRef))
+        addGhostNode(sourceRef, ghostNodes, ghostIds);
+      else endpointsRenderable = false;
+    }
+
+    if (targetMissing) {
+      if (isStixIdValidForNode(targetRef))
+        addGhostNode(targetRef, ghostNodes, ghostIds);
+      else endpointsRenderable = false;
+    }
+
+    if (!endpointsRenderable) {
+      console.warn(
+        "Skipped relationship %s %s %s: missing endpoint object(s)",
+        sourceRef,
+        relType,
+        targetRef
+      );
+
+      return null;
+    }
+
+    return makeEdgeObject(sourceRef, targetRef, relType, stixRel.get("id"));
+  }
+
+  if (isStixIdValidForNode(sourceRef) && isStixIdValidForNode(targetRef))
+    return makeEdgeObject(sourceRef, targetRef, relType, stixRel.get("id"));
+
+  return null;
 }
 
 function* getValuesAtPath(
@@ -789,7 +847,10 @@ function* getValuesAtPath(
 function edgesFromPropertyPaths(
   stixObject: Map<string, any>,
   stixIdToObject: Map<string, any>,
-  relInfo: [string, string, boolean][]
+  relInfo: [string, string, boolean][],
+  showDanglingRefs: boolean = false,
+  ghostNodes: any[] = [],
+  ghostIds: Set<string> = new Set()
 ): any[] {
   let sourceId = stixObject.get("id");
   let edges: any[] = [];
@@ -798,6 +859,17 @@ function edgesFromPropertyPaths(
     for (let ref of getValuesAtPath(stixObject, propPath)) {
       if (isStixIdValidForNode(ref)) {
         if (stixIdToObject.has(ref)) {
+          let edgeSrc, edgeDst;
+
+          if (forward) [edgeSrc, edgeDst] = [sourceId, ref];
+          else [edgeSrc, edgeDst] = [ref, sourceId];
+
+          let edge = makeEdgeObject(edgeSrc, edgeDst, edgeLabel);
+
+          edges.push(edge);
+        } else if (showDanglingRefs) {
+          addGhostNode(ref, ghostNodes, ghostIds);
+
           let edgeSrc, edgeDst;
 
           if (forward) [edgeSrc, edgeDst] = [sourceId, ref];
@@ -824,7 +896,10 @@ function edgesFromPropertyPaths(
 function edgesForEmbeddedRelationships(
   stixObject: Map<string, any>,
   stixIdToObject: Map<string, any>,
-  config: Map<string, any> | null = null
+  config: Map<string, any> | null = null,
+  showDanglingRefs: boolean = false,
+  ghostNodes: any[] = [],
+  ghostIds: Set<string> = new Set()
 ): any[] {
   let stixType = stixObject.get("type");
 
@@ -858,9 +933,91 @@ function edgesForEmbeddedRelationships(
 
   if (userTypeSpecificRels) allRels.push(...userTypeSpecificRels);
 
-  let edges = edgesFromPropertyPaths(stixObject, stixIdToObject, allRels);
+  let edges = edgesFromPropertyPaths(
+    stixObject,
+    stixIdToObject,
+    allRels,
+    showDanglingRefs,
+    ghostNodes,
+    ghostIds
+  );
 
   return edges;
+}
+
+/**
+ * STIX 2.0 `observed-data` objects embed their captured cyber observables
+ * directly in an `objects` dictionary, rather than referencing separate SCO
+ * objects via `object_refs` as STIX 2.1 does. This renders each embedded
+ * observable as its own node, connected to the observed-data node with a
+ * "refers-to" edge (mirroring the 2.1 object_refs behaviour).
+ */
+function nodesAndEdgesForObservedDataObjects(
+  stixObject: Map<string, any>
+): [any[], any[]] {
+  let nodes: any[] = [];
+  let edges: any[] = [];
+
+  let observedId = stixObject.get("id");
+  let observedObjects = stixObject.get("objects");
+
+  if (!(observedObjects instanceof Map)) return [nodes, edges];
+
+  for (let [key, sco] of observedObjects) {
+    if (!(sco instanceof Map)) continue;
+
+    let scoType = sco.get("type") || "unknown";
+    // 2.0 SCOs carry no id of their own, so derive a deterministic one from
+    // the observed-data id and the dictionary key.
+    let scoId = observedId + ".objects." + key;
+
+    let scoName =
+      sco.get("name") || sco.get("value") || sco.get("path") || scoType;
+    if (scoName.length > 40) scoName = scoName.substring(0, 40) + "...";
+
+    nodes.push({ id: scoId, label: scoName, group: scoType });
+    edges.push(makeEdgeObject(observedId, scoId, "refers-to"));
+  }
+
+  return [nodes, edges];
+}
+
+/**
+ * Builds a placeholder ("ghost") node for a STIX id referenced by the bundle
+ * but not present in it, so dangling relationships stay visible instead of
+ * being silently dropped. Only used when `showDanglingRefs` is enabled.
+ */
+function makeGhostNode(refId: string): any {
+  // A STIX id is "<type>--<uuid>", so the type is everything except the
+  // trailing "--" plus 36-character UUID (38 characters).
+  let type = refId.substring(0, refId.length - 38);
+  if (type.length === 0) type = "unknown";
+
+  return {
+    id: refId,
+    label: type,
+    group: type,
+    dangling: true,
+    opacity: 0.35,
+    font: { color: "#9ca3af" },
+  };
+}
+
+/**
+ * Adds a ghost node for a dangling reference, unless one already exists for
+ * that id. Returns true when the reference can be rendered (ghost created or
+ * already present), false when the id is not usable as a node id at all.
+ */
+function addGhostNode(
+  refId: string,
+  ghostNodes: any[],
+  ghostIds: Set<string>
+): boolean {
+  if (ghostIds.has(refId)) return true;
+
+  ghostNodes.push(makeGhostNode(refId));
+  ghostIds.add(refId);
+  return true;
 }
 
 function makeNodesAndEdges(
@@ -873,27 +1030,50 @@ function makeNodesAndEdges(
 
   let stixIdToName: Map<string, string> = new Map();
 
+  let ghostNodes: any[] = [];
+  let ghostIds: Set<string> = new Set();
+
+  let showDanglingRefs = false;
+  if (config && config.has("showDanglingRefs"))
+    showDanglingRefs = config.get("showDanglingRefs") === true;
+
   for (let object of stixIdToObject.values()) {
     let stixType = object.get("type");
 
     if (stixType === "relationship") {
-      let edge = edgeForRelationship(object, stixIdToObject);
+      let edge = edgeForRelationship(
+        object,
+        stixIdToObject,
+        showDanglingRefs,
+        ghostNodes,
+        ghostIds
+      );
 
       if (edge) edges.push(edge);
     } else if (isStixTypeValidForNode(stixType)) {
       let name = nameForStixObject(object, stixIdToName, nameCounts, config);
       let node = makeNodeObject(name, object);
+      node.group = stixType;
       nodes.push(node);
 
       let embeddedRelEdges = edgesForEmbeddedRelationships(
         object,
         stixIdToObject,
-        config
+        config,
+        showDanglingRefs,
+        ghostNodes,
+        ghostIds
       );
 
       edges.push(...embeddedRelEdges);
+
+      let [scoNodes, scoEdges] = nodesAndEdgesForObservedDataObjects(object);
+      nodes.push(...scoNodes);
+      edges.push(...scoEdges);
     }
   }
+
+  nodes.push(...ghostNodes);
 
   return [nodes, edges];
 }
@@ -923,21 +1103,28 @@ function filterStixObjects(
   return stixObjects;
 }
 
+/**
+ * Accepted shapes for the graph-builder configuration. `normalizeConfig`
+ * converts Maps, plain objects and JSON strings into the internal Map form.
+ */
+type ConfigInput = Map<string, any> | Record<string, any> | string | null;
+
 function makeGraphData(
   visjs: any,
   stixContent: any,
-  config: Map<string, any> | null = null
+  config: ConfigInput = null
 ): [DataSet<any>, DataSet<any>, Map<string, any>] {
-  if (config !== null) config = normalizeConfig(config);
+  let normalizedConfig: Map<string, any> | null = null;
+  if (config !== null) normalizedConfig = normalizeConfig(config);
 
   let stixObjects = normalizeContent(stixContent);
-  stixObjects = filterStixObjects(stixObjects, config);
+  stixObjects = filterStixObjects(stixObjects, normalizedConfig);
 
   let stixIdToObject: Map<string, any> = new Map();
 
   for (let object of stixObjects) stixIdToObject.set(object.get("id"), object);
 
-  let [nodes, edges] = makeNodesAndEdges(stixIdToObject, config);
+  let [nodes, edges] = makeNodesAndEdges(stixIdToObject, normalizedConfig);
 
   let nodeDataSet = new DataSet(nodes);
   let edgeDataSet = new DataSet(edges);
@@ -950,7 +1137,7 @@ function makeGraphView(
   nodeDataSet: DataSet<any>,
   edgeDataSet: DataSet<any>,
   stixIdToObject: Map<string, any>,
-  config: Map<string, any> | null = null
+  config: ConfigInput = null
 ): GraphView {
   let view = new GraphView(
     visjs,
@@ -958,7 +1145,7 @@ function makeGraphView(
     nodeDataSet,
     edgeDataSet,
     stixIdToObject,
-    config
+    config !== null ? (normalizeConfig(config) as Map<string, any>) : null
   );
 
   view.on("stabilized", (e: any) => stabilizedHandler(e, view));
@@ -968,14 +1155,14 @@ function makeGraphView(
 
 function makeModule(visjs: any) {
   let module = {
-    makeGraphData: (stixContent: any, config: Map<string, any> | null = null) =>
+    makeGraphData: (stixContent: any, config: ConfigInput = null) =>
       makeGraphData(visjs, stixContent, config),
     makeGraphView: (
       domElement: HTMLElement,
       nodeDataSet: DataSet<any>,
       edgeDataSet: DataSet<any>,
       stixIdToObject: Map<string, any>,
-      config: Map<string, any> | null = null
+      config: ConfigInput = null
     ) =>
       makeGraphView(
         visjs,

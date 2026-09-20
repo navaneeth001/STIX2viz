@@ -44,12 +44,60 @@ describe("stix2vis public entry point", () => {
     ]);
   });
 
-  it("keeps the public prop surface unchanged", () => {
+  it("keeps the documented 1.x props first, with the new optional props after", () => {
     expect(Object.keys(StixViewerView.propTypes ?? {})).toEqual([
       "stixJson",
       "graphStyle",
       "wrapStyle",
       "onNodeclick",
+      // 1.2 additions (all optional, default-off).
+      "onNodeSelect",
+      "onEdgeSelect",
+      "onSelectionChange",
+      "onError",
+      "config",
+      "showDanglingRefs",
+      "showDetailsPanel",
+      "showToolbar",
+    ]);
+  });
+
+  it("forwards the new optional props to the viewer", () => {
+    const onNodeSelect = vi.fn();
+    const onEdgeSelect = vi.fn();
+    const onSelectionChange = vi.fn();
+    const onError = vi.fn();
+    const config = { include: { type: "malware" } };
+
+    render(
+      <StixViewerView
+        stixJson={{}}
+        onNodeSelect={onNodeSelect}
+        onEdgeSelect={onEdgeSelect}
+        onSelectionChange={onSelectionChange}
+        onError={onError}
+        config={config}
+        showDanglingRefs
+        showDetailsPanel
+        showToolbar
+      />
+    );
+
+    expect(mocks.receivedProps).toEqual([
+      {
+        stixJson: {},
+        graphStyle: undefined,
+        wrapStyle: undefined,
+        onNodeclick: undefined,
+        onNodeSelect,
+        onEdgeSelect,
+        onSelectionChange,
+        onError,
+        config,
+        showDanglingRefs: true,
+        showDetailsPanel: true,
+        showToolbar: true,
+      },
     ]);
   });
 });
