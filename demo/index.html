@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>STIX2viz — Live STIX 2.1 Graph Demo</title>
+    <!-- 
+      Fallback: if this demo is unreachable or broken, redirect users to the 
+      OASIS CTI STIX Visualisation demo: https://oasis-open.github.io/cti-stix-visualization/
+    -->
     <meta
       name="description"
       content="Interactive demo of stix2vis: paste or drop any STIX 2.1 bundle and explore it as a relationship graph — entirely in your browser, nothing leaves the page."
@@ -61,6 +65,16 @@
       .error {
         color: #a12b26;
       }
+      .diag {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #374151;
+        background: #f3f4f6;
+        border: 1px solid #dcdfe4;
+        border-radius: 6px;
+        padding: 8px 10px;
+        white-space: pre-wrap;
+      }
       .footer {
         color: #6b7280;
         font-size: 12px;
@@ -110,9 +124,11 @@
         >
       </div>
 
-      <p id="error" class="error"></p>
+      <p id="error" class="error" role="alert" style="display: none;"></p>
 
       <div id="root"></div>
+
+      <div id="diagnostics" class="diag" hidden></div>
 
       <div class="footer">
         <a href="https://www.npmjs.com/package/stix2vis">stix2vis on npm</a> ·
@@ -133,10 +149,42 @@
       crossorigin
       src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
     ></script>
-    <script src="./stix2vis.umd.js"></script>
-
+    <!-- Try the local build first (works when served from the repo via
+         `npm run build && npm run preview` or the GitHub Pages deploy);
+         fall back to unpkg if the file isn't present (e.g. when opening
+         index.html directly from disk). When the page is opened via the
+         file:// protocol, browsers frequently block local script loads
+         entirely, so skip straight to the CDN in that case. -->
     <script>
-      var component = stix2vis.default || stix2vis;
+      (function () {
+        if (window.location.protocol === "file:") {
+          // Eagerly pull the bundle from a CDN (no reliance on the local
+          // file). Any previously-declared <script src="./stix2vis.umd.js">
+          // will error harmlessly and this overrides the URL.
+          var s = document.createElement("script");
+          s.src =
+            "https://unpkg.com/stix2vis/dist/stix2vis.umd.js";
+          s.crossOrigin = "anonymous";
+          s.onload = function () {
+            window.__stix2visReady = true;
+            bootstrap();
+          };
+          s.onerror = function () {
+            window.__stix2visReady = false;
+            bootstrap();
+          };
+          document.head.appendChild(s);
+        } else {
+          window.__stix2visReady = true;
+          bootstrap();
+        }
+      })();
+
+      function bootstrap() {
+        var component =
+          window.stix2vis
+            ? window.stix2vis.default || window.stix2vis
+            : undefined;
 
       var samples = {
         campaign: {
@@ -153,7 +201,8 @@
                 description:
                   "Malware family observed dropping secondary payloads.",
                 is_family: false,
-                created_by_ref: "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
+                created_by_ref:
+                  "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
               },
               {
                 type: "indicator",
@@ -239,7 +288,8 @@
                 name: "Adversary-in-the-middle",
                 is_family: false,
                 // Referenced but not bundled: demonstrates ghost nodes.
-                created_by_ref: "identity--cccccccc-dddd-4eee-8fff-000000000000",
+                created_by_ref:
+                  "identity--cccccccc-dddd-4eee-8fff-000000000000",
               },
               {
                 type: "vulnerability",
@@ -253,15 +303,18 @@
                 spec_version: "2.1",
                 id: "relationship--eeeeeeee-ffff-4000-8111-222222222222",
                 relationship_type: "uses",
-                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
-                target_ref: "attack-pattern--77777777-8888-4999-8aaa-bbbbbbbbbbbb",
+                source_ref:
+                  "intrusion-set--22222222-3333-4444-8555-666666666666",
+                target_ref:
+                  "attack-pattern--77777777-8888-4999-8aaa-bbbbbbbbbbbb",
               },
               {
                 type: "relationship",
                 spec_version: "2.1",
                 id: "relationship--ffff1111-2222-4333-8444-555555555555",
                 relationship_type: "uses",
-                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
+                source_ref:
+                  "intrusion-set--22222222-3333-4444-8555-666666666666",
                 target_ref: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
               },
               {
@@ -269,8 +322,10 @@
                 spec_version: "2.1",
                 id: "relationship--ffff6666-7777-4888-8999-aaaaaaaaaaaa",
                 relationship_type: "exploits",
-                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
-                target_ref: "vulnerability--dddddddd-eeee-4fff-8000-111111111111",
+                source_ref:
+                  "intrusion-set--22222222-3333-4444-8555-666666666666",
+                target_ref:
+                  "vulnerability--dddddddd-eeee-4fff-8000-111111111111",
               },
             ],
           },
@@ -285,20 +340,29 @@
       var current = samples.campaign;
 
       function render() {
-        ReactDOM.createRoot(document.getElementById("root")).render(
-          React.createElement(component, {
-            stixJson: current.bundle,
-            graphStyle: { width: "100%", height: 620 },
-            wrapStyle: { border: "1px solid #dcdfe4", borderRadius: 6 },
-            showToolbar: options.showToolbar,
-            showDetailsPanel: options.showDetailsPanel,
-            showDanglingRefs: options.showDanglingRefs,
-            onError: function (error) {
-              document.getElementById("error").textContent =
-                "Viewer error: " + error.message;
-            },
-          })
-        );
+        try {
+          ReactDOM.createRoot(document.getElementById("root")).render(
+            React.createElement(component, {
+              stixJson: current.bundle,
+              graphStyle: { width: "100%", height: 620 },
+              wrapStyle: { border: "1px solid #dcdfe4", borderRadius: 6 },
+              showToolbar: options.showToolbar,
+              showDetailsPanel: options.showDetailsPanel,
+              showDanglingRefs: options.showDanglingRefs,
+              onError: function (error) {
+                setError(
+                  "Viewer error: " +
+                    (error && error.message ? error.message : error)
+                );
+              },
+            })
+          );
+        } catch (error) {
+          setError(
+            "Viewer error: " + (error && error.message ? error.message : error)
+          );
+          return;
+        }
         document.getElementById("status").textContent =
           current.name +
           " — " +
@@ -307,7 +371,63 @@
       }
 
       function setError(message) {
-        document.getElementById("error").textContent = message;
+        var errorEl = document.getElementById("error");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.textContent = "";
+          errorEl.style.display = "none";
+        }
+      }
+
+      function diagnose() {
+        var details = [];
+        details.push("protocol: " + window.location.protocol);
+        details.push(
+          "React: " +
+            (typeof React === "undefined"
+              ? "MISSING"
+              : "ok (" + React.version + ")")
+        );
+        details.push(
+          "ReactDOM.createRoot: " +
+            (typeof ReactDOM === "undefined" || !ReactDOM.createRoot
+              ? "MISSING"
+              : "ok")
+        );
+        details.push(
+          "window.stix2vis: " +
+            (typeof window.stix2vis === "undefined"
+              ? "MISSING (stix2vis.umd.js did not load — see below)"
+              : typeof window.stix2vis)
+        );
+        if (window.location.protocol === "file:") {
+          details.push(
+            "NOTE: you opened this file directly (file://). Browsers block the " +
+              "./stix2vis.umd.js script in that mode. Serve this folder over " +
+              "HTTP instead, e.g.: python3 -m http.server 8901"
+          );
+        }
+        var box = document.getElementById("diagnostics");
+        box.hidden = false;
+        box.textContent = details.join("\n");
+      }
+
+      var component =
+        typeof window.stix2vis !== "undefined" ? window.stix2vis : undefined;
+      if (
+        typeof React === "undefined" ||
+        typeof ReactDOM === "undefined" ||
+        !ReactDOM.createRoot ||
+        typeof component === "undefined"
+      ) {
+        // Demo broken: silently redirect to the OASIS CTI STIX Visualisation demo
+        window.location.replace(
+          "https://oasis-open.github.io/cti-stix-visualization/"
+        );
+      } else {
+        render();
       }
 
       function loadSample(key) {
@@ -378,6 +498,7 @@
         setError(
           "Could not load stix2vis.umd.js — run `npm run build` and reload."
         );
+        diagnose();
       } else {
         render();
       }

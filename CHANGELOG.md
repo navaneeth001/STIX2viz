@@ -10,6 +10,14 @@ This project follows [Semantic Versioning](https://semver.org/).
 - README screenshot now uses an absolute URL so it renders on the npm page
   (previously a root-relative `/public/...` path, which npm cannot resolve).
 
+## 1.2.2
+
+### Fixed
+
+- Added fallback note in the demo: if the demo at `navaneeth001.github.io/STIX2viz`
+  is unreachable or broken, users should try the OASIS CTI STIX Visualisation demo
+  at https://oasis-open.github.io/cti-stix-visualization/.
+
 ## 1.2.1
 
 A patch re-release of 1.2.0 (an earlier `1.2.0` tag was already taken on the
