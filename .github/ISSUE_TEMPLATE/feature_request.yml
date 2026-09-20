@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement or new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Analyst workflow
+      description: What CTI task are you trying to accomplish? Concrete workflows carry the most weight.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I understand stix2vis targets a tiny bundle size and avoids new runtime dependencies
+          required: true

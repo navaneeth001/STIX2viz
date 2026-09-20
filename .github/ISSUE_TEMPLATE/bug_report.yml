@@ -1,0 +1,40 @@
+name: Bug report
+description: Report something that renders wrong, crashes or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Scrub real indicators before pasting bundles!** Use RFC 5737
+        addresses (`203.0.113.x`) and example domains.
+  - type: input
+    id: version
+    attributes:
+      label: stix2vis version
+      placeholder: 1.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A code snippet or minimal STIX bundle that reproduces the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behaviour
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Browser (bundler: webpack/Vite/etc.)
+        - Browser (CDN / UMD script tag)
+        - Node (SSR / headless)
+        - Other
+    validations:
+      required: true

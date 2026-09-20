@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STIX2viz — Live STIX 2.1 Graph Demo</title>
+    <meta
+      name="description"
+      content="Interactive demo of stix2vis: paste or drop any STIX 2.1 bundle and explore it as a relationship graph — entirely in your browser, nothing leaves the page."
+    />
+    <style>
+      body {
+        font:
+          14px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f7f9;
+        color: #1c1e21;
+      }
+      .panel {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #dcdfe4;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .header p {
+        margin: 4px 0 0;
+        color: #4b5563;
+      }
+      .badge {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+      }
+      .gh-button {
+        display: inline-block;
+        background: #1c1e21;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      .error {
+        color: #a12b26;
+      }
+      .footer {
+        color: #6b7280;
+        font-size: 12px;
+        margin-top: 12px;
+        text-align: center;
+      }
+      .footer a {
+        color: #4b5563;
+      }
+      #dropzone.drag {
+        outline: 2px dashed #6366f1;
+        outline-offset: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel" id="dropzone">
+      <div class="row header">
+        <div style="flex: 1; min-width: 260px">
+          <h1>STIX2viz — live demo</h1>
+          <p>
+            Drop any STIX 2.1 bundle and explore it as an interactive
+            relationship graph. 100% client-side — your threat intel never
+            leaves the page.
+          </p>
+        </div>
+        <a class="gh-button" href="https://github.com/navaneeth001/STIX2viz"
+          >★ Star on GitHub</a
+        >
+      </div>
+
+      <div class="row" style="margin: 12px 0">
+        <input id="file" type="file" accept=".json,application/json" />
+        <button id="sample1" type="button">Sample: malware campaign</button>
+        <button id="sample2" type="button">Sample: intrusion set</button>
+        <span id="status" class="badge"></span>
+      </div>
+
+      <div class="row" style="margin-bottom: 12px">
+        <label><input id="optToolbar" type="checkbox" checked /> Toolbar</label>
+        <label
+          ><input id="optDetails" type="checkbox" checked /> Detail panel</label
+        >
+        <label
+          ><input id="optDangling" type="checkbox" checked /> Dangling-ref
+          ghosts</label
+        >
+      </div>
+
+      <p id="error" class="error"></p>
+
+      <div id="root"></div>
+
+      <div class="footer">
+        <a href="https://www.npmjs.com/package/stix2vis">stix2vis on npm</a> ·
+        <a href="https://github.com/navaneeth001/STIX2viz#readme"
+          >Documentation</a
+        >
+        · Runs entirely in your browser — nothing is uploaded.
+      </div>
+    </div>
+
+    <!-- React UMD builds from a CDN; the stix2vis bundle is built from this
+         repository by the Pages workflow and served next to this page. -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="./stix2vis.umd.js"></script>
+
+    <script>
+      var component = stix2vis.default || stix2vis;
+
+      var samples = {
+        campaign: {
+          name: "Sample: malware campaign",
+          bundle: {
+            type: "bundle",
+            id: "bundle--44af6c39-c09b-49c5-9de2-39fc22653b2d",
+            objects: [
+              {
+                type: "malware",
+                spec_version: "2.1",
+                id: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+                name: "Adversary-in-the-middle",
+                description:
+                  "Malware family observed dropping secondary payloads.",
+                is_family: false,
+                created_by_ref: "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
+              },
+              {
+                type: "indicator",
+                spec_version: "2.1",
+                id: "indicator--8e2e2d2b-17d4-4cbf-938f-98ee46b3cd3f",
+                pattern_type: "stix",
+                pattern: "[domain-name:value = 'c2.evil-example.com']",
+                name: "C2 domain",
+              },
+              {
+                type: "domain-name",
+                spec_version: "2.1",
+                id: "domain-name--6b3b2f66-c34e-4c1a-8c34-6a5f5e6f2a01",
+                value: "c2.evil-example.com",
+                resolves_to_refs: [
+                  "ipv4-addr--9a5f2c1e-6f3e-4f1f-9d1c-1d2f3a4b5c6d",
+                ],
+              },
+              {
+                type: "ipv4-addr",
+                spec_version: "2.1",
+                id: "ipv4-addr--9a5f2c1e-6f3e-4f1f-9d1c-1d2f3a4b5c6d",
+                value: "203.0.113.66",
+              },
+              {
+                type: "identity",
+                spec_version: "2.1",
+                id: "identity--f431f809-377b-45e0-aa1c-6a4751cae5ff",
+                name: "Example Threat Intel",
+                identity_class: "organization",
+              },
+              {
+                type: "relationship",
+                spec_version: "2.1",
+                id: "relationship--0d2d7b39-5b0b-4b1c-8a3c-4c4b41c88c8a",
+                relationship_type: "indicates",
+                source_ref: "indicator--8e2e2d2b-17d4-4cbf-938f-98ee46b3cd3f",
+                target_ref: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+              },
+              {
+                type: "relationship",
+                spec_version: "2.1",
+                id: "relationship--11111111-1111-4111-8111-111111111111",
+                relationship_type: "communicates-with",
+                source_ref: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+                target_ref: "domain-name--6b3b2f66-c34e-4c1a-8c34-6a5f5e6f2a01",
+              },
+            ],
+          },
+        },
+        intrusion: {
+          name: "Sample: intrusion set",
+          bundle: {
+            type: "bundle",
+            id: "bundle--aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+            objects: [
+              {
+                type: "intrusion-set",
+                spec_version: "2.1",
+                id: "intrusion-set--22222222-3333-4444-8555-666666666666",
+                name: "APT Example",
+                description: "Hypothetical intrusion set for demo purposes.",
+              },
+              {
+                type: "attack-pattern",
+                spec_version: "2.1",
+                id: "attack-pattern--77777777-8888-4999-8aaa-bbbbbbbbbbbb",
+                name: "Spearphishing Attachment",
+                external_references: [
+                  { source_name: "mitre-attack", external_id: "T1566.001" },
+                ],
+                kill_chain_phases: [
+                  {
+                    kill_chain_name: "mitre-attack",
+                    phase_name: "initial-access",
+                  },
+                ],
+              },
+              {
+                type: "malware",
+                spec_version: "2.1",
+                id: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+                name: "Adversary-in-the-middle",
+                is_family: false,
+                // Referenced but not bundled: demonstrates ghost nodes.
+                created_by_ref: "identity--cccccccc-dddd-4eee-8fff-000000000000",
+              },
+              {
+                type: "vulnerability",
+                spec_version: "2.1",
+                id: "vulnerability--dddddddd-eeee-4fff-8000-111111111111",
+                name: "CVE-2024-1337",
+                description: "Example vulnerability exploited by APT Example.",
+              },
+              {
+                type: "relationship",
+                spec_version: "2.1",
+                id: "relationship--eeeeeeee-ffff-4000-8111-222222222222",
+                relationship_type: "uses",
+                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
+                target_ref: "attack-pattern--77777777-8888-4999-8aaa-bbbbbbbbbbbb",
+              },
+              {
+                type: "relationship",
+                spec_version: "2.1",
+                id: "relationship--ffff1111-2222-4333-8444-555555555555",
+                relationship_type: "uses",
+                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
+                target_ref: "malware--9c4638ec-f1de-4ddb-abf4-1b760417654e",
+              },
+              {
+                type: "relationship",
+                spec_version: "2.1",
+                id: "relationship--ffff6666-7777-4888-8999-aaaaaaaaaaaa",
+                relationship_type: "exploits",
+                source_ref: "intrusion-set--22222222-3333-4444-8555-666666666666",
+                target_ref: "vulnerability--dddddddd-eeee-4fff-8000-111111111111",
+              },
+            ],
+          },
+        },
+      };
+
+      var options = {
+        showToolbar: true,
+        showDetailsPanel: true,
+        showDanglingRefs: true,
+      };
+      var current = samples.campaign;
+
+      function render() {
+        ReactDOM.createRoot(document.getElementById("root")).render(
+          React.createElement(component, {
+            stixJson: current.bundle,
+            graphStyle: { width: "100%", height: 620 },
+            wrapStyle: { border: "1px solid #dcdfe4", borderRadius: 6 },
+            showToolbar: options.showToolbar,
+            showDetailsPanel: options.showDetailsPanel,
+            showDanglingRefs: options.showDanglingRefs,
+            onError: function (error) {
+              document.getElementById("error").textContent =
+                "Viewer error: " + error.message;
+            },
+          })
+        );
+        document.getElementById("status").textContent =
+          current.name +
+          " — " +
+          (current.bundle.objects ? current.bundle.objects.length : 1) +
+          " objects";
+      }
+
+      function setError(message) {
+        document.getElementById("error").textContent = message;
+      }
+
+      function loadSample(key) {
+        current = samples[key];
+        setError("");
+        render();
+      }
+
+      function loadFile(file) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var parsed = JSON.parse(String(reader.result));
+            current = { name: file.name, bundle: parsed };
+            setError("");
+            render();
+          } catch (error) {
+            setError("Could not parse " + file.name + ": " + error.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      document.getElementById("sample1").addEventListener("click", function () {
+        loadSample("campaign");
+      });
+      document.getElementById("sample2").addEventListener("click", function () {
+        loadSample("intrusion");
+      });
+      document.getElementById("file").addEventListener("change", function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (file) loadFile(file);
+      });
+
+      [
+        ["optToolbar", "showToolbar"],
+        ["optDetails", "showDetailsPanel"],
+        ["optDangling", "showDanglingRefs"],
+      ].forEach(function (pair) {
+        document
+          .getElementById(pair[0])
+          .addEventListener("change", function (e) {
+            options[pair[1]] = e.target.checked;
+            render();
+          });
+      });
+
+      var dropzone = document.getElementById("dropzone");
+      ["dragenter", "dragover"].forEach(function (name) {
+        dropzone.addEventListener(name, function (e) {
+          e.preventDefault();
+          dropzone.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (name) {
+        dropzone.addEventListener(name, function (e) {
+          e.preventDefault();
+          dropzone.classList.remove("drag");
+        });
+      });
+      dropzone.addEventListener("drop", function (e) {
+        var file =
+          e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) loadFile(file);
+      });
+
+      if (!window.stix2vis) {
+        setError(
+          "Could not load stix2vis.umd.js — run `npm run build` and reload."
+        );
+      } else {
+        render();
+      }
+    </script>
+  </body>
+</html>

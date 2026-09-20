@@ -3,10 +3,33 @@
 [![npm version](https://img.shields.io/npm/v/stix2vis.svg)](https://www.npmjs.com/package/stix2vis)
 [![CI](https://github.com/navaneeth001/STIX2viz/actions/workflows/ci.yml/badge.svg)](https://github.com/navaneeth001/STIX2viz/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/stix2vis.svg)](./LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/navaneeth001/STIX2viz?style=social)](https://github.com/navaneeth001/STIX2viz/stargazers)
+[![npm downloads](https://img.shields.io/npm/dm/stix2vis.svg)](https://www.npmjs.com/package/stix2vis)
+[![Live demo](https://img.shields.io/badge/demo-live-brightgreen)](https://navaneeth001.github.io/STIX2viz/)
+
+> 🖥️ **[Try the live demo](https://navaneeth001.github.io/STIX2viz/)** — drop in
+> any STIX 2.1 bundle and explore it as a graph. Nothing to install, nothing
+> uploaded.
 
 A React component that renders STIX 2.1 content — bundles, arrays of objects or a
 single object — as an interactive relationship graph. Everything runs entirely in
 the browser: your threat intel never leaves the page.
+
+## Why stix2vis?
+
+- **Built for CTI analysts** — relationship and embedded-reference edges,
+  ghost nodes for dangling references, a detail panel, search, type filters
+  and PNG/JSON export out of the box.
+- **Tiny and dependency-light** — three runtime dependencies (`vis-network`,
+  `vis-data`, `prop-types`); `react` is a peer you already have. Everything
+  else is native DOM.
+- **Private by design** — no telemetry, no network calls; STIX content never
+  leaves the page.
+- **TypeScript-first** — ships type declarations; input can be a bundle,
+  object array, single object or raw JSON string.
+- **Production-hardened** — behaviour-locked test suite, CI on Node 22/24,
+  bundle-size budget, `publint` + type-resolution checks and provenance-backed
+  publishes.
 
 Inspired by the
 [OASIS CTI STIX Visualisation](https://oasis-open.github.io/cti-stix-visualization/)
@@ -27,6 +50,7 @@ project.
 - [Bundle formats](#bundle-formats)
 - [Development](#development)
 - [Contributing](#contributing)
+- [Community](#community)
 - [Roadmap](#roadmap)
 
 ## Install
@@ -272,12 +296,20 @@ npm deprecate "stix2vis@<1.1.5" "Broken packaging outside webpack; upgrade to 1.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please run `npm run verify` before opening
-a PR: it runs linting, formatting, type checking, the test suite, the build, a
-bundle budget check and package/type-resolution checks (`publint`,
+Issues and pull requests are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md)
+for the project rules and the `npm run verify` gate. Please run it before
+opening a PR: it runs linting, formatting, type checking, the test suite, the
+build, a bundle budget check and package/type-resolution checks (`publint`,
 `@arethetypeswrong/cli`). Behaviour is locked by tests, so if a change to
 `makeGraphData` output is intentional, update the expectations in
 `src/stix2viz/stix2viz/stix2viz.test.ts` deliberately.
+
+## Community
+
+- 🐛 [Report a bug](https://github.com/navaneeth001/STIX2viz/issues/new?template=bug_report.yml)
+- 💡 [Suggest a feature](https://github.com/navaneeth001/STIX2viz/issues/new?template=feature_request.yml)
+- 💬 [Ask a question](https://github.com/navaneeth001/STIX2viz/discussions)
+- 🔒 [Report a security issue](https://github.com/navaneeth001/STIX2viz/security/advisories/new)
 
 ## Roadmap
 

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussions
+    url: https://github.com/navaneeth001/STIX2viz/discussions
+    about: Ask how to integrate stix2vis or propose ideas before filing an issue.
