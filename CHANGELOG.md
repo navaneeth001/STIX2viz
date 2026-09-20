@@ -3,6 +3,13 @@
 All notable changes to this project are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Fixed
+
+- README screenshot now uses an absolute URL so it renders on the npm page
+  (previously a root-relative `/public/...` path, which npm cannot resolve).
+
 ## 1.2.1
 
 A patch re-release of 1.2.0 (an earlier `1.2.0` tag was already taken on the

@@ -35,7 +35,7 @@ Inspired by the
 [OASIS CTI STIX Visualisation](https://oasis-open.github.io/cti-stix-visualization/)
 project.
 
-![Sample rendering of a STIX 2.1 JSON showing malware, indicators and identities](/public/stix2.png)
+![Sample rendering of a STIX 2.1 JSON showing malware, indicators and identities](https://raw.githubusercontent.com/navaneeth001/STIX2viz/main/public/stix2.png)
 
 ## Contents
 
