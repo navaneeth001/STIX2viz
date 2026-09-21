@@ -26,3 +26,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# demo build artifact (built fresh by the Pages workflow)
+/demo/stix2vis.umd.js
+/demo-dist

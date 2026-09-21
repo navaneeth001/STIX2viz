@@ -4,10 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>STIX2viz — Live STIX 2.1 Graph Demo</title>
-    <!-- 
-      Fallback: if this demo is unreachable or broken, redirect users to the 
-      OASIS CTI STIX Visualisation demo: https://oasis-open.github.io/cti-stix-visualization/
-    -->
     <meta
       name="description"
       content="Interactive demo of stix2vis: paste or drop any STIX 2.1 bundle and explore it as a relationship graph — entirely in your browser, nothing leaves the page."
@@ -90,6 +86,7 @@
       }
     </style>
   </head>
+
   <body>
     <div class="panel" id="dropzone">
       <div class="row header">
@@ -124,7 +121,7 @@
         >
       </div>
 
-      <p id="error" class="error" role="alert" style="display: none;"></p>
+      <p id="error" class="error" role="alert" style="display: none"></p>
 
       <div id="root"></div>
 
@@ -149,43 +146,11 @@
       crossorigin
       src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
     ></script>
-    <!-- Try the local build first (works when served from the repo via
-         `npm run build && npm run preview` or the GitHub Pages deploy);
-         fall back to unpkg if the file isn't present (e.g. when opening
-         index.html directly from disk). When the page is opened via the
-         file:// protocol, browsers frequently block local script loads
-         entirely, so skip straight to the CDN in that case. -->
+
     <script>
-      (function () {
-        if (window.location.protocol === "file:") {
-          // Eagerly pull the bundle from a CDN (no reliance on the local
-          // file). Any previously-declared <script src="./stix2vis.umd.js">
-          // will error harmlessly and this overrides the URL.
-          var s = document.createElement("script");
-          s.src =
-            "https://unpkg.com/stix2vis/dist/stix2vis.umd.js";
-          s.crossOrigin = "anonymous";
-          s.onload = function () {
-            window.__stix2visReady = true;
-            bootstrap();
-          };
-          s.onerror = function () {
-            window.__stix2visReady = false;
-            bootstrap();
-          };
-          document.head.appendChild(s);
-        } else {
-          window.__stix2visReady = true;
-          bootstrap();
-        }
-      })();
-
-      function bootstrap() {
-        var component =
-          window.stix2vis
-            ? window.stix2vis.default || window.stix2vis
-            : undefined;
-
+      // ---------------------------------------------------------------
+      // Sample bundles, viewer state and small DOM helpers
+      // ---------------------------------------------------------------
       var samples = {
         campaign: {
           name: "Sample: malware campaign",
@@ -338,10 +303,15 @@
         showDanglingRefs: true,
       };
       var current = samples.campaign;
-
+      // React 18 warns if createRoot() is called more than once for the same
+      // container, and render() runs on every option toggle — so cache it.
+      var reactRoot = null;
       function render() {
         try {
-          ReactDOM.createRoot(document.getElementById("root")).render(
+          if (!reactRoot) {
+            reactRoot = ReactDOM.createRoot(document.getElementById("root"));
+          }
+          reactRoot.render(
             React.createElement(component, {
               stixJson: current.bundle,
               graphStyle: { width: "100%", height: 620 },
@@ -413,23 +383,6 @@
         box.hidden = false;
         box.textContent = details.join("\n");
       }
-
-      var component =
-        typeof window.stix2vis !== "undefined" ? window.stix2vis : undefined;
-      if (
-        typeof React === "undefined" ||
-        typeof ReactDOM === "undefined" ||
-        !ReactDOM.createRoot ||
-        typeof component === "undefined"
-      ) {
-        // Demo broken: silently redirect to the OASIS CTI STIX Visualisation demo
-        window.location.replace(
-          "https://oasis-open.github.io/cti-stix-visualization/"
-        );
-      } else {
-        render();
-      }
-
       function loadSample(key) {
         current = samples[key];
         setError("");
@@ -450,7 +403,6 @@
         };
         reader.readAsText(file);
       }
-
       document.getElementById("sample1").addEventListener("click", function () {
         loadSample("campaign");
       });
@@ -493,15 +445,76 @@
           e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
         if (file) loadFile(file);
       });
+      // ---------------------------------------------------------------
+      // Bundle loading + bootstrap
+      // ---------------------------------------------------------------
+      // Set by bootstrap() once stix2vis.umd.js has been evaluated. The UMD
+      // build exposes the component as the module namespace object, with the
+      // actual React component on `.default`.
+      var component;
 
-      if (!window.stix2vis) {
-        setError(
-          "Could not load stix2vis.umd.js — run `npm run build` and reload."
-        );
-        diagnose();
-      } else {
-        render();
+      var CDN_BUNDLE = "https://unpkg.com/stix2vis/dist/stix2vis.umd.js";
+
+      function bootstrap() {
+        component = window.stix2vis
+          ? window.stix2vis.default || window.stix2vis
+          : undefined;
+
+        if (
+          typeof React === "undefined" ||
+          typeof ReactDOM === "undefined" ||
+          !ReactDOM.createRoot ||
+          typeof component === "undefined" ||
+          typeof component !== "function"
+        ) {
+          setError(
+            "Could not start the demo — a required script failed to load. " +
+              "Diagnostics below."
+          );
+          diagnose();
+          return;
+        }
+
+        // Render the default sample straight away so the page is never blank.
+        loadSample("campaign");
       }
+
+      function injectScript(src) {
+        var script = document.createElement("script");
+        script.src = src;
+        script.crossOrigin = "anonymous";
+        script.onload = function () {
+          bootstrap();
+        };
+        script.onerror = function () {
+          bootstrap();
+        };
+        document.head.appendChild(script);
+      }
+
+      (function loadBundle() {
+        // When the page is served over http(s) — the GitHub Pages deploy,
+        // `npm run preview`, or any static server — the UMD bundle sits next
+        // to this file. When the file is opened straight from disk (file://),
+        // browsers block that local load, so go to the CDN instead.
+        var served = window.location.protocol !== "file:";
+
+        if (!served) {
+          injectScript(CDN_BUNDLE);
+          return;
+        }
+
+        var script = document.createElement("script");
+        script.src = "./stix2vis.umd.js";
+        script.onload = function () {
+          bootstrap();
+        };
+        script.onerror = function () {
+          // Local build missing (e.g. served from a checkout without dist/).
+          injectScript(CDN_BUNDLE);
+        };
+        document.head.appendChild(script);
+      })();
     </script>
   </body>
 </html>

@@ -13,6 +13,18 @@ export default defineConfig({
   // See vite.config.ts: the classic JSX runtime keeps the bundle free of
   // `react/jsx-runtime`, so the UMD build only needs the React global.
   plugins: [react({ jsxRuntime: "classic" })],
+  // `prop-types` (and its bundled `react-is`) ship CommonJS development
+  // branches guarded by `process.env.NODE_ENV`. In this build prop-types is
+  // bundled rather than external, so those checks survive into the UMD file —
+  // and a browser has no `process`, which made the whole bundle throw
+  // `ReferenceError: process is not defined` on evaluation and left
+  // `window.stix2vis` undefined (i.e. a blank CDN/Pages demo). Substituting the
+  // literal here statically folds the dev-only branches away, exactly like
+  // React's own CDN builds do. ESM/CJS keep prop-types external so they never
+  // saw this problem.
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  },
   build: {
     copyPublicDir: false,
     // The ESM/CJS pass already cleaned dist/; do not wipe its output.

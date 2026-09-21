@@ -11,7 +11,7 @@
 //    `export default` signature and expects a `.default` property under
 //    `moduleResolution: node16`. Exposing both shapes removes that mismatch
 //    without changing the primary export.
-import { appendFileSync, copyFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, readFileSync } from "node:fs";
 
 copyFileSync("dist/index.d.ts", "dist/index.d.mts");
 
@@ -21,3 +21,21 @@ appendFileSync(
     "// exposing `.default` for TypeScript node16 CommonJS resolution.\n" +
     "module.exports.default = module.exports;\n"
 );
+
+// 3. Guard: the UMD/CDN build must be evaluable in a browser, where `process`
+//    does not exist. `prop-types` is bundled into this build (unlike ESM/CJS,
+//    where it stays external), so any surviving `process.env.*` guard throws
+//    `ReferenceError: process is not defined` on load and silently leaves
+//    `window.stix2vis` undefined — a blank page for every CDN/Pages user.
+//    `vite.umd.config.ts` defines `process.env.NODE_ENV` to fold those branches
+//    away; this assertion makes sure that fix cannot regress unnoticed.
+const umdSource = readFileSync("dist/stix2vis.umd.js", "utf8");
+const processRefs = umdSource.match(/process\.env\./g) ?? [];
+
+if (processRefs.length > 0) {
+  throw new Error(
+    `dist/stix2vis.umd.js still references process.env (${processRefs.length}x) and ` +
+      "would throw `ReferenceError: process is not defined` in a browser. " +
+      'Make sure vite.umd.config.ts defines "process.env.NODE_ENV".'
+  );
+}
